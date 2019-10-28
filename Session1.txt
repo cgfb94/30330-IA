@@ -28,5 +28,13 @@ Natural object output -  xyz, pitch angles, yaw etc
 
 Account for different lighting conditions - grey calibration object to detect illumination
 
+Goals for first session
 
+1. take image of sample
+2. binarise it 
+3. filter the image
+4. pick out features/ circle (edge detection)
+5. moments of the features
+6. translation of features
 
+find the center of the circle, navigate the terrain, find a relative position in the sample
