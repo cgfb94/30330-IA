@@ -1,0 +1,32 @@
+1- Terrain relative navigation
+
+Scaling factor relating to the distance from the surface.
+
+2 - Shape (circle based) navigation
+
+Distance to surface can be used to approximate the size of the circle in the image
+
+Scene analysis is important- 3 pages in the start of the report - Where are we, what are the conditions (lighting, etc),
+elaborate problem statement, noise and signal ratios, which parameters are important to recreate. compare real world parameters with
+test setup and scale if needed (focal length difference between rover and lab)
+
+
+output parameters from scence analysis
+
+
+
+80-90 pages report
+
+Distance can be taken as given (variation in feature size may be useful for relative distance measurement)
+Find constallation 
+Find edges of circle
+Output the position of camera
+
+Robustness of solution - No false positive, no variance with different conditions in lighting, colours, surfaces
+
+Natural object output -  xyz, pitch angles, yaw etc
+
+Account for different lighting conditions - grey calibration object to detect illumination
+
+
+
