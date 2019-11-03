@@ -6,6 +6,12 @@
 int main(int argc, char* argv[])
 {
 	//webcam_capture();
-	if (ex4::contour("Images\\mars4.jpeg")) return 1;
+	std::string imPath =  utils::getAbsImagePath("Images\\mars1.jpeg");
+	// Produce some contour images
+	//if (ex4::contour(imPath.c_str())) return 1;
+
+	//Look for circles
+	circle(imPath.c_str());
+
 	return 0;
 }

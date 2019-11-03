@@ -5,6 +5,9 @@
 #include "cxcore.h"
 #include <conio.h>
 
+// to find cwd
+#include <direct.h>
+
 #include <iostream>
 #include <math.h>
 #include <algorithm>
@@ -12,13 +15,24 @@
 #include <map>
 #include <string>
 
+int circle(const char* source);
 
 int hist(IplImage source);
 int webcam_capture(void);	// #TODO change webcam capture to return an IpImage
 
+namespace utils
+{
+	std::string getAbsImagePath(const char* localPath);
+}
+
 namespace ex4
 {
+	// Median filter
+	// #TODO: Make 9x9
 	float median3x3(char* n, int width);
+
+	// Draws around the first contour it finds
+	// #TODO: See if this works for all pic sizes
 	int contour(const char* name);
 }
 

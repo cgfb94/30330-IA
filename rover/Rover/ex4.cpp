@@ -1,7 +1,6 @@
 #pragma warning(disable : 4996)
 
 #include "rover.h"
-#include <direct.h>
 
 using namespace std;
 
@@ -48,18 +47,9 @@ namespace ex4
 
 		//CREATE IMAGE OBJECT FOR PICTURE
 		IplImage* colour = 0, * pic = 0;
-		string buffer = _getcwd(NULL, 0);
 		
-		// Cut-off debug section of cwd
-		string cwd = buffer.substr(0, buffer.length() - 5);
-		//const char* imagePath = (cwd.append(name)).c_str;
-		cout << cwd + name;
-		//cin >> name; //C:\Users\30330\Documents\cn\pen.pgm
-		const char* nametwo = "2images";
-		string imagePath = cwd + "Rover\\" + name;
-		const char* c_str = imagePath.c_str();
 		//LOAD PICTURE INFO
-		pic = cvLoadImage(c_str, 0);
+		pic = cvLoadImage(name, 0);
 						  
 
 		if (!pic) return 1;
