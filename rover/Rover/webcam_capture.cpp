@@ -22,7 +22,7 @@ webcam_capture(void)
 			if (!cvGrabFrame(capture))
 				break;
 			frame = cvRetrieveFrame(capture);
-			(*frame).width = 1500;
+			(*frame).width = 600;
 			if (!frame)break;
 			if (!frame_copy)
 			{
@@ -42,14 +42,12 @@ webcam_capture(void)
 
 			hist(*frame);
 
-			cvWaitKey();
-
-			if (cvWaitKey(5) > 0)
-				break;
+			break;
 		}
 	}
+	cvWaitKey();
 	cvReleaseImage(&frame_copy);
-	cvDestroyWindow("kill me!");
+	cvDestroyWindow(wName);
 	return 0;
 
 }

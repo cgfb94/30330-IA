@@ -123,10 +123,15 @@
     <ClCompile Include="hist.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Source.cpp" />
+    <ClCompile Include="ex5.cpp" />
+    <ClCompile Include="ex4.cpp" />
     <ClCompile Include="webcam_capture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="rover.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Images\mars4.jpeg" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

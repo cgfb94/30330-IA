@@ -50,6 +50,6 @@ int hist(IplImage source)
 
 	namedWindow("H-S Histogram", 1);
 	imshow("H-S Histogram", histImg);
-	waitKey();
+	//waitKey();
 	return 0;
 }

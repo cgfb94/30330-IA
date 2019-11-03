@@ -5,6 +5,7 @@
 
 int main(int argc, char* argv[])
 {
-	webcam_capture();
+	//webcam_capture();
+	if (ex4::contour("Images\\mars4.jpeg")) return 1;
 	return 0;
 }
