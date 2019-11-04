@@ -15,8 +15,8 @@ int main(int argc, char* argv[])
 
 	//Terrain navigation
 	int position;
-	IplImage* pic = cvLoadImage(imPath.c_str(), 0);
-	position = first_image(pic);
+	//IplImage* pic = cvLoadImage(imPath.c_str(), 0);
+	position = first_image(imPath.c_str());
 
 	return 0;
 }

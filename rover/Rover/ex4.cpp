@@ -47,6 +47,7 @@ namespace ex4
 			for (int i = (pic->width + 1); i < (pic->width - 1) * (pic->height - 1); i++) {
 				char* pointer = &pic->imageData[i];
 				filtered_pic->imageData[i] = unsigned char(median3x3(pointer, pic->width));
+				pic = cvCloneImage(filtered_pic);
 			}
 		}
 

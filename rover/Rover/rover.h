@@ -23,7 +23,7 @@ IplImage* webcam_capture(void);	// #TODO change webcam capture to return an IpIm
 struct location {
 	float x; float y; float z; float angle;
 };
-int first_image(IplImage* pic);
+int first_image(const char* source);
 
 namespace utils
 {
