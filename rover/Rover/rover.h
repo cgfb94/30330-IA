@@ -18,7 +18,7 @@
 int circle(const char* source);
 
 int hist(IplImage source);
-int webcam_capture(void);	// #TODO change webcam capture to return an IpImage
+IplImage* webcam_capture(void);	// #TODO change webcam capture to return an IpImage
 
 namespace utils
 {

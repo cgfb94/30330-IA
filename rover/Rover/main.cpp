@@ -5,7 +5,7 @@
 
 int main(int argc, char* argv[])
 {
-	//webcam_capture();
+	//IplImage* Image = webcam_capture();
 	std::string imPath =  utils::getAbsImagePath("Images\\mars1.jpeg");
 	// Produce some contour images
 	//if (ex4::contour(imPath.c_str())) return 1;

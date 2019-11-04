@@ -3,10 +3,9 @@
 
 
 
-int 
-webcam_capture(void)
+IplImage* webcam_capture(void)
 {
-	const char* wName = "kill me!";
+	const char* wName = "Captured image";
 	// window namecvNamedWindow(wName, 0); // create simple window
 
 	CvCapture* capture = 0;
@@ -22,7 +21,7 @@ webcam_capture(void)
 			if (!cvGrabFrame(capture))
 				break;
 			frame = cvRetrieveFrame(capture);
-			(*frame).width = 600;
+			//(*frame).width = 600;
 			if (!frame)break;
 			if (!frame_copy)
 			{
@@ -35,19 +34,19 @@ webcam_capture(void)
 			else
 				cvFlip(frame, frame_copy, 0);
 
-			IplImage *grey = cvCreateImage(cvSize(frame->width, frame->height), IPL_DEPTH_8U, 1);
-			cvCvtColor(frame, grey, CV_BGR2GRAY);
+			//IplImage *grey = cvCreateImage(cvSize(frame->width, frame->height), IPL_DEPTH_8U, 1);
+			//cvCvtColor(frame, grey, CV_BGR2GRAY);
 
-			cvShowImage(wName, grey);
+			cvShowImage(wName, frame_copy);
 
-			hist(*frame);
+			//hist(*frame);
 
-			break;
+			if(cvWaitKey()=='g')break;
 		}
 	}
 	cvWaitKey();
 	cvReleaseImage(&frame_copy);
 	cvDestroyWindow(wName);
-	return 0;
+	return frame_copy;
 
 }
