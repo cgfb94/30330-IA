@@ -1,6 +1,7 @@
 // Disable depreciation warning
 #pragma warning(disable : 4996)
 
+#include "mars.h"
 #include "rover.h"
 
 using namespace cv; using namespace std;
@@ -17,8 +18,8 @@ float bin_m00(Mat img) {
 	return mass;
 }
 
-//CREATE CONSTELLATIONS:
-Mat zodiak(Mat pic, double wanted_ratio) {
+//Create night sky
+Mat firmament(Mat pic, double wanted_ratio) {
 	Mat bin_pic;
 	float island_ratio = 1; float mass = 0;
 	int local_treshold = 0;
@@ -41,6 +42,12 @@ Mat zodiak(Mat pic, double wanted_ratio) {
 
 	std::cout << "\n\n>> Constellations created: \n    The mass of the image is: " << M.m00 << "\n    The star-sky ratio is: " << island_ratio;
 	return bin_pic;
+}
+
+//Search for nearby stars
+int geminis(Mat sky_pic, point centre) {
+
+	return 0;
 }
 
 
@@ -67,27 +74,22 @@ int first_image(const char* source)
 
 
 	//CREATE CONSTELLATIONS
-	//Find lightspots and turn them into stars
+	//Find light spots and turn them into stars
 	Mat star_pic = dist_transf_slopes(pic_RGB, 150, THRESH_BINARY);
-	star_pic = zodiak(star_pic, 0.01);
+	star_pic = firmament(star_pic, 0.01);
 	
 	//Remove big shadows
 	threshold(inv_pic, inv_pic, 200, 255, THRESH_TOZERO_INV);
-	//Find darkspots and turn them into stars
-	Mat dark_pic = zodiak(inv_pic, 0.01);
+	//Find dark spots and turn them into stars
+	Mat dark_pic = firmament(inv_pic, 0.01);
 	Mat sky_pic;
 	star_pic.convertTo(star_pic, dark_pic.type());
 	add(star_pic, dark_pic, sky_pic);
 
 	//SHOW IMAGES IN NEW WINDOWS 
-	namedWindow("pic", CV_WINDOW_AUTOSIZE);
 	imshow("pic", Mat(pic));
-	namedWindow("star_pic", CV_WINDOW_AUTOSIZE);
 	imshow("star_pic", Mat(star_pic));
-
-	namedWindow("dark_pic", CV_WINDOW_AUTOSIZE);
 	imshow("dark_pic", Mat(dark_pic));
-	namedWindow("sky_pic", CV_WINDOW_AUTOSIZE);
 	imshow("sky_pic", Mat(sky_pic));
 	
 	cv::waitKey();

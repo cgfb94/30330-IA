@@ -132,6 +132,7 @@
     <ClCompile Include="webcam_capture.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="mars.h" />
     <ClInclude Include="rover.h" />
   </ItemGroup>
   <ItemGroup>
