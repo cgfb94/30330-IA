@@ -51,6 +51,9 @@
     <ClCompile Include="conversions.cpp">
       <Filter>Source Files\convert</Filter>
     </ClCompile>
+    <ClCompile Include="regions_islands.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="rover.h">
