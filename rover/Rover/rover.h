@@ -25,7 +25,7 @@ struct location {
 };
 int first_image(const char* source);
 cv::Mat watershed_regions(cv::Mat pic_RGB, int bin_threshold, int bin_type);
-cv::Mat dist_transf_islands(cv::Mat pic_RGB, int bin_threshold, int bin_type);
+cv::Mat dist_transf_slopes(cv::Mat pic_RGB, int bin_threshold, int bin_type);
 
 namespace utils
 {
@@ -48,7 +48,7 @@ namespace ex4
 
 namespace ex5
 // Functions written for ex 5: stereo vision/ identifying movement
-// Implimentation of reg9x9 uses c arrays rather than vectors
+// Implementation of reg9x9 uses c arrays rather than vectors
 {
 	using namespace std;
 

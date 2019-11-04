@@ -85,7 +85,7 @@ Mat watershed_regions(Mat pic_RGB, int bin_threshold, int bin_type) {
 	return dst;
 }
 
-Mat dist_transf_islands(Mat pic_RGB, int bin_threshold, int bin_type) {
+Mat dist_transf_slopes(Mat pic_RGB, int bin_threshold, int bin_type) {
 
 	Mat pic;
 	cvtColor(pic_RGB, pic, COLOR_BGR2GRAY);
@@ -98,17 +98,8 @@ Mat dist_transf_islands(Mat pic_RGB, int bin_threshold, int bin_type) {
 
 	// Normalize the distance image for range = {0.0, 1.0}
 	// so we can visualize and threshold it
-	normalize(dist, dist, 0, 1.0, NORM_MINMAX);
-	//imshow("Distance Transform Image", dist);
-
-	// Threshold to obtain the peaks
-	// This will be the markers for the foreground objects
-	threshold(dist, dist, 0.4, 1.0, THRESH_BINARY);
-	// Dilate a bit the dist image
-	Mat kernel1 = Mat::ones(3, 3, CV_8U);
-	dilate(dist, dist, kernel1);
-	imshow("Distance Transform Peaks", dist);
-
+	//normalize(dist, dist, 0, 255, NORM_MINMAX);
+	imshow("Distance Transform Image", dist);
 	return dist;
 }
 

@@ -48,45 +48,47 @@ Mat zodiak(Mat pic, double wanted_ratio) {
 int first_image(const char* source)
 {
 	location pos;
-	Mat inv_pic, pic;
+	Mat inv_pic_RGB, inv_pic, pic;
 
-	Mat pic1 = imread(source, 1);
-	resize(pic1, pic1, Size(), 0.4, 0.4);
+	Mat pic_RGB = imread(source, 1);
+	resize(pic_RGB, pic_RGB, Size(), 0.4, 0.4);
 
 	//TURN TO GRAYSCALE
 	//Mat gray_pic(pic.size(), CV_8U);
-	cvtColor(pic1, pic, CV_BGR2GRAY);
+	cvtColor(pic_RGB, pic, CV_BGR2GRAY);
 
 	//REMOVE SOME NOISE
 	//pic2 = ex4::remove_SaltPepper(pic, 1);
 	medianBlur(pic, pic, 3);
 
 	//CREATE INVERTED PICTURE
+	bitwise_not(pic_RGB, inv_pic_RGB);
 	bitwise_not(pic, inv_pic);
 
 
 	//CREATE CONSTELLATIONS
-	Mat star_pic = zodiak(pic, 0.05);
-	/*Mat star_pic;
-	threshold(pic, star_pic, 250, 255, THRESH_BINARY | THRESH_OTSU);*/
-	threshold(inv_pic, inv_pic, 250, 255, 4);
+	//Find lightspots and turn them into stars
+	Mat star_pic = dist_transf_slopes(pic_RGB, 150, THRESH_BINARY);
+	star_pic = zodiak(star_pic, 0.01);
+	
+	//Remove big shadows
+	threshold(inv_pic, inv_pic, 200, 255, THRESH_TOZERO_INV);
+	//Find darkspots and turn them into stars
 	Mat dark_pic = zodiak(inv_pic, 0.01);
 	Mat sky_pic;
+	star_pic.convertTo(star_pic, dark_pic.type());
 	add(star_pic, dark_pic, sky_pic);
 
-	Mat countries = watershed_regions(pic1, 100, THRESH_BINARY);
-
-
-
 	//SHOW IMAGES IN NEW WINDOWS 
-	/*namedWindow("pic", CV_WINDOW_AUTOSIZE);
+	namedWindow("pic", CV_WINDOW_AUTOSIZE);
 	imshow("pic", Mat(pic));
 	namedWindow("star_pic", CV_WINDOW_AUTOSIZE);
 	imshow("star_pic", Mat(star_pic));
+
 	namedWindow("dark_pic", CV_WINDOW_AUTOSIZE);
 	imshow("dark_pic", Mat(dark_pic));
 	namedWindow("sky_pic", CV_WINDOW_AUTOSIZE);
-	imshow("sky_pic", Mat(sky_pic));*/
+	imshow("sky_pic", Mat(sky_pic));
 	
 	cv::waitKey();
 	return 0;

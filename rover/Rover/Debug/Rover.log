@@ -1,2 +1,5 @@
-﻿  regions_islands.cpp
+﻿  terrain.cpp
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(25,16): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(39,24): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(50,11): warning C4101: 'pos': unreferenced local variable
   Rover.vcxproj -> D:\joaro\Documents\GitHub\30330-IA\rover\Debug\Rover.exe
