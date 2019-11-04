@@ -40,7 +40,18 @@ namespace ex4
 	//	return sum / K;
 	//}
 
+	IplImage* remove_SaltPepper(IplImage* pic, int amount) {
+		IplImage* filtered_pic = cvCloneImage(pic);
 
+		for (int j = 0; j < amount; j++) {
+			for (int i = (pic->width + 1); i < (pic->width - 1) * (pic->height - 1); i++) {
+				char* pointer = &pic->imageData[i];
+				filtered_pic->imageData[i] = unsigned char(median3x3(pointer, pic->width));
+			}
+		}
+
+		return filtered_pic;
+	}
 
 	int contour(const char* name) {
 

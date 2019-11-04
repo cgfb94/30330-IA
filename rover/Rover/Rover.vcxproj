@@ -121,6 +121,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="circle.cpp" />
+    <ClCompile Include="conversions.cpp" />
     <ClCompile Include="hist.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ex5.cpp" />

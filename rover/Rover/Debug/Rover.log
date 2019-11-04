@@ -1,4 +1,3 @@
-﻿  main.cpp
-  terrain.cpp
-  Generating Code...
+﻿  terrain.cpp
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(10,11): warning C4101: 'pos': unreferenced local variable
   Rover.vcxproj -> D:\joaro\Documents\GitHub\30330-IA\rover\Debug\Rover.exe

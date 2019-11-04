@@ -20,6 +20,11 @@ int circle(const char* source);
 int hist(IplImage source);
 IplImage* webcam_capture(void);	// #TODO change webcam capture to return an IpImage
 
+struct location {
+	float x; float y; float z; float angle;
+};
+int first_image(IplImage* pic);
+
 namespace utils
 {
 	std::string getAbsImagePath(const char* localPath);
@@ -34,6 +39,8 @@ namespace ex4
 	// Draws around the first contour it finds
 	// #TODO: See if this works for all pic sizes
 	int contour(const char* name);
+
+	IplImage* remove_SaltPepper(IplImage* pic, int amount);
 }
 
 
@@ -55,4 +62,10 @@ namespace ex5
 	
 	// tries to find point in one image in another and draw circle
 	int analyse_movement(char* pathL, char* pathR);
+}
+
+namespace convert
+{
+	IplImage* mat2Ipl_RGB(cv::Mat image1);
+	IplImage* mat2Ipl_grey(cv::Mat image1);
 }
