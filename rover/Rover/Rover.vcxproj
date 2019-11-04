@@ -125,6 +125,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ex5.cpp" />
     <ClCompile Include="ex4.cpp" />
+    <ClCompile Include="terrain.cpp" />
     <ClCompile Include="utils.cpp" />
     <ClCompile Include="webcam_capture.cpp" />
   </ItemGroup>
