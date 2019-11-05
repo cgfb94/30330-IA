@@ -51,23 +51,28 @@ int bodysearch(Mat sky_pic, point centre) {
 	return 0;
 }
 
-region get_region(Mat light_pic, int mat_side) {
+region brake_in_AxB_regions(Mat light_pic, int A, int B) {
 	region captured;
 	Mat show_regions = light_pic;
-	int m = light_pic.rows / mat_side;
-	int n = light_pic.cols / mat_side;
+	int m = light_pic.rows / A;
+	int n = light_pic.cols / A;
 
-	for (int i = 0; i < mat_side*mat_side; i++) {
-		int r = i % mat_side; int s = i / mat_side;
+	for (int i = 0; i < A*B; i++) {
+		int r = i % A; int s = i / A;
 		captured.light_feature[i].picture = light_pic(Rect(r, s, n, m));
-		captured.dark_feature[i].picture = shadow_pic(Rect(r, s, n, m));
-
-
+		captured.light_feature[i].M = moments(captured.light_feature[i].picture, 1);
+		captured.light_feature[i].o_x = captured.light_feature[i].M.m10 / captured.light_feature[i].M.m00;
+		captured.light_feature[i].o_y = captured.light_feature[i].M.m01 / captured.light_feature[i].M.m00;
+		captured.pos_x = r; captured.pos_y = s;
+		
 		//rectangle(show_regions, Rect(r * n, s * m, n, m), 200); //Draw grid
 	}
 	imshow("sections", show_regions);
 	return captured;
 }
+
+
+
 
 
 int first_image(const char* source)
@@ -102,7 +107,7 @@ int first_image(const char* source)
 
 
 	//GET INFO
-	region data = get_region(star_pic, 6);
+	region data = brake_in_AxB_regions(star_pic, 6, 6);
 
 	//SHOW IMAGES IN NEW WINDOWS 
 	imshow("random region", Mat(data.light_feature[5].picture));

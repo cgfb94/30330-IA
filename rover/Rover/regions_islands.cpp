@@ -99,7 +99,7 @@ Mat dist_transf_slopes(Mat pic_RGB, int bin_threshold, int bin_type) {
 	// Normalize the distance image for range = {0.0, 1.0}
 	// so we can visualize and threshold it
 	//normalize(dist, dist, 0, 255, NORM_MINMAX);
-	imshow("Distance Transform Image", dist);
+	//imshow("Distance Transform Image", dist);
 	return dist;
 }
 
