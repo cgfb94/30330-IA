@@ -13,9 +13,17 @@ struct point {
 	float near_angle[10];
 };
 
-class constellation
+struct feature
 {
-private:
-	point star[10];
-	Mat pic;
+	Mat picture;
+	int o_x; int o_y;
+	Moments M;
 };
+
+struct region
+{
+	feature light_feature[36];
+	feature dark_feature[36];
+};
+
+

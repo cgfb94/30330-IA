@@ -1,15 +1,5 @@
-﻿  conversions.cpp
-  ex4.cpp
-  ex5.cpp
-  hist.cpp
-  main.cpp
-  regions_islands.cpp
-  terrain.cpp
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\ex4.cpp(107,17): warning C4244: 'initializing': conversion from 'int64' to 'double', possible loss of data
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(26,16): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(40,24): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-  utils.cpp
-  webcam_capture.cpp
-  Generating Code...
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(57,11): warning C4101: 'pos': unreferenced local variable
+﻿  terrain.cpp
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(27,16): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(41,24): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(73,11): warning C4101: 'pos': unreferenced local variable
   Rover.vcxproj -> D:\joaro\Documents\GitHub\30330-IA\rover\Debug\Rover.exe
