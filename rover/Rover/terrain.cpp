@@ -4,7 +4,8 @@
 #include "mars.h"
 #include "rover.h"
 
-using namespace cv; using namespace std;
+using namespace std;
+using namespace cv;
 
 float bin_m00(Mat img) {
 	float mass = 0;
@@ -40,16 +41,33 @@ Mat firmament(Mat pic, double wanted_ratio) {
 		island_ratio = M.m00 / im_size;
 	}
 
-	std::cout << "\n\n>> Constellations created: \n    The mass of the image is: " << M.m00 << "\n    The star-sky ratio is: " << island_ratio;
+	std::cout << "\n\n>> Constellations created: \n    The mass of the image is: " << M.m00 << "\n    The star-sky ratio is: " << island_ratio << "\n    Threshold: " << local_treshold;
 	return bin_pic;
 }
 
 //Search for nearby stars
-int geminis(Mat sky_pic, point centre) {
+int bodysearch(Mat sky_pic, point centre) {
 
 	return 0;
 }
 
+region get_region(Mat light_pic, int mat_side) {
+	region captured;
+	Mat show_regions = light_pic;
+	int m = light_pic.rows / mat_side;
+	int n = light_pic.cols / mat_side;
+
+	for (int i = 0; i < mat_side*mat_side; i++) {
+		int r = i % mat_side; int s = i / mat_side;
+		captured.light_feature[i].picture = light_pic(Rect(r, s, n, m));
+		captured.dark_feature[i].picture = shadow_pic(Rect(r, s, n, m));
+
+
+		//rectangle(show_regions, Rect(r * n, s * m, n, m), 200); //Draw grid
+	}
+	imshow("sections", show_regions);
+	return captured;
+}
 
 
 int first_image(const char* source)
@@ -62,36 +80,35 @@ int first_image(const char* source)
 
 	//TURN TO GRAYSCALE
 	//Mat gray_pic(pic.size(), CV_8U);
-	cvtColor(pic_RGB, pic, CV_BGR2GRAY);
+	//cvtColor(pic_RGB, pic, CV_BGR2GRAY);
 
 	//REMOVE SOME NOISE
 	//pic2 = ex4::remove_SaltPepper(pic, 1);
-	medianBlur(pic, pic, 3);
+	medianBlur(pic_RGB, pic_RGB, 3);
 
 	//CREATE INVERTED PICTURE
 	bitwise_not(pic_RGB, inv_pic_RGB);
-	bitwise_not(pic, inv_pic);
-
 
 	//CREATE CONSTELLATIONS
 	//Find light spots and turn them into stars
 	Mat star_pic = dist_transf_slopes(pic_RGB, 150, THRESH_BINARY);
-	star_pic = firmament(star_pic, 0.01);
 	
 	//Remove big shadows
-	threshold(inv_pic, inv_pic, 200, 255, THRESH_TOZERO_INV);
 	//Find dark spots and turn them into stars
-	Mat dark_pic = firmament(inv_pic, 0.01);
-	Mat sky_pic;
-	star_pic.convertTo(star_pic, dark_pic.type());
-	add(star_pic, dark_pic, sky_pic);
+	//Mat dark_pic = dist_transf_slopes(inv_pic_RGB, 150, THRESH_BINARY);
+	//Mat sky_pic;
+	//star_pic.convertTo(star_pic, dark_pic.type());
+	//add(star_pic, dark_pic, sky_pic);
+
+
+	//GET INFO
+	region data = get_region(star_pic, 6);
 
 	//SHOW IMAGES IN NEW WINDOWS 
-	imshow("pic", Mat(pic));
-	imshow("star_pic", Mat(star_pic));
-	imshow("dark_pic", Mat(dark_pic));
-	imshow("sky_pic", Mat(sky_pic));
-	
+	imshow("random region", Mat(data.light_feature[5].picture));
+	//imshow("dark_pic", Mat(dark_pic));
+	//imshow("sky_pic", Mat(sky_pic));
+
 	cv::waitKey();
 	return 0;
 }
