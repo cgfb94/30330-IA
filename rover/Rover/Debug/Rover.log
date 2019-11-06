@@ -3,42 +3,68 @@ D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(27,16): warning C4244
 D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(41,24): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
 D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(58,67): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
 D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(59,67): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(77,13): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(77,43): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(79,25): warning C4244: 'argument': conversion from 'double' to '_Tp', possible loss of data
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(79,25): warning C4244:         with
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(79,25): warning C4244:         [
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(79,25): warning C4244:             _Tp=float
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(79,25): warning C4244:         ]
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(79,17): warning C4244: 'argument': conversion from 'double' to '_Tp', possible loss of data
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(79,17): warning C4244:         with
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(79,17): warning C4244:         [
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(79,17): warning C4244:             _Tp=float
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(79,17): warning C4244:         ]
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(81,13): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(82,14): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(84,30): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(86,34): warning C4244: 'argument': conversion from 'double' to '_Tp', possible loss of data
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(86,34): warning C4244:         with
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(86,34): warning C4244:         [
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(86,34): warning C4244:             _Tp=int
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(86,34): warning C4244:         ]
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(86,22): warning C4244: 'argument': conversion from 'double' to '_Tp', possible loss of data
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(86,22): warning C4244:         with
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(86,22): warning C4244:         [
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(86,22): warning C4244:             _Tp=int
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(86,22): warning C4244:         ]
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(91,49): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(91,24): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(92,39): warning C4244: 'argument': conversion from 'double' to '_Tp', possible loss of data
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(92,39): warning C4244:         with
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(92,39): warning C4244:         [
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(92,39): warning C4244:             _Tp=int
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(92,39): warning C4244:         ]
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(92,31): warning C4244: 'argument': conversion from 'double' to '_Tp', possible loss of data
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(92,31): warning C4244:         with
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(92,31): warning C4244:         [
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(92,31): warning C4244:             _Tp=int
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(92,31): warning C4244:         ]
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(102,15): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(70,43): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(79,13): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(79,43): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(81,25): warning C4244: 'argument': conversion from 'double' to '_Tp', possible loss of data
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(81,25): warning C4244:         with
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(81,25): warning C4244:         [
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(81,25): warning C4244:             _Tp=float
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(81,25): warning C4244:         ]
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(81,17): warning C4244: 'argument': conversion from 'double' to '_Tp', possible loss of data
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(81,17): warning C4244:         with
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(81,17): warning C4244:         [
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(81,17): warning C4244:             _Tp=float
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(81,17): warning C4244:         ]
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(83,13): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(84,14): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(89,30): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(91,34): warning C4244: 'argument': conversion from 'double' to '_Tp', possible loss of data
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(91,34): warning C4244:         with
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(91,34): warning C4244:         [
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(91,34): warning C4244:             _Tp=int
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(91,34): warning C4244:         ]
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(91,22): warning C4244: 'argument': conversion from 'double' to '_Tp', possible loss of data
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(91,22): warning C4244:         with
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(91,22): warning C4244:         [
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(91,22): warning C4244:             _Tp=int
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(91,22): warning C4244:         ]
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(96,49): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(96,24): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(97,39): warning C4244: 'argument': conversion from 'double' to '_Tp', possible loss of data
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(97,39): warning C4244:         with
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(97,39): warning C4244:         [
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(97,39): warning C4244:             _Tp=int
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(97,39): warning C4244:         ]
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(97,31): warning C4244: 'argument': conversion from 'double' to '_Tp', possible loss of data
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(97,31): warning C4244:         with
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(97,31): warning C4244:         [
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(97,31): warning C4244:             _Tp=int
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(97,31): warning C4244:         ]
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(113,17): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(120,58): warning C4244: 'argument': conversion from 'double' to '_Tp', possible loss of data
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(120,58): warning C4244:         with
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(120,58): warning C4244:         [
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(120,58): warning C4244:             _Tp=int
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(120,58): warning C4244:         ]
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(120,43): warning C4244: 'argument': conversion from 'double' to '_Tp', possible loss of data
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(120,43): warning C4244:         with
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(120,43): warning C4244:         [
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(120,43): warning C4244:             _Tp=int
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(120,43): warning C4244:         ]
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(126,18): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(126,31): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(126,48): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(195,26): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(196,26): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(199,50): warning C4244: 'argument': conversion from 'float' to '_Tp', possible loss of data
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(199,50): warning C4244:         with
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(199,50): warning C4244:         [
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(199,50): warning C4244:             _Tp=int
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(199,50): warning C4244:         ]
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(199,31): warning C4244: 'argument': conversion from 'float' to '_Tp', possible loss of data
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(199,31): warning C4244:         with
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(199,31): warning C4244:         [
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(199,31): warning C4244:             _Tp=int
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(199,31): warning C4244:         ]
   Rover.vcxproj -> D:\joaro\Documents\GitHub\30330-IA\rover\Debug\Rover.exe

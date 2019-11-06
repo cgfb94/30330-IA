@@ -5,11 +5,11 @@
 
 using namespace cv; using namespace std;
 
-
 struct location {
-	float x; float y; float z;
-	float angle;
-	float error=100000000;
+	float x=0; float y=0; float z=0;
+	float angle=0;
+	float error = 100000;
+	Mat overlap;
 };
 
 struct feature
@@ -26,4 +26,5 @@ struct region
 	int pos_x; int pos_y;
 };
 
+int try_fit_feature(Mat object, Mat image);
 

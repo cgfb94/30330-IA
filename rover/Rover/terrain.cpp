@@ -19,6 +19,9 @@ float bin_m00(Mat img) {
 	return mass;
 }
 
+
+//OLD
+/*
 //Create night sky
 Mat firmament(Mat pic, double wanted_ratio) {
 	Mat bin_pic;
@@ -65,15 +68,17 @@ region brake_in_AxB_features(Mat light_pic, int A, int B) {
 	return captured;
 }
 
-
 location fit_feature(feature ft, Mat image)
 {
-	int trans_step = 1; int rot_step = 5; int sideways_range = 5;
+	int expected_rotation = 90; int variance = 1.5;
+	int trans_step = 10; int rot_step = 5; int sideways_range = 40;
+	
+	//Initialize position
 	location found;
 	Mat stuff = ft.picture;
-	double stuff_angle = ((atan2(double(2 * ft.M.nu11), double(ft.M.nu20 - ft.M.nu02)))/2)*180/3.1415;
+	double index_stuff = (ft.M.nu20 + ft.M.nu02) / ft.M.m00;
+	double stuff_angle = ((atan2(double(2 * ft.M.nu11), double(ft.M.nu20 - ft.M.nu02)))/2)*180/3.1415 + 90;
 	int n = stuff.rows; int m = stuff.cols;
-	Mat1b mask(image.size(), uchar(0));
 	float ro_x = (m - 1.0) / 2.0; float ro_y = (n - 1.0) / 2.0;
 	double radius = sqrt(((m - 1.0) / 2.0)* ((m - 1.0) / 2.0) + ((n - 1.0) / 2.0)* ((n - 1.0) / 2.0));
 	Point2f centre(radius, radius);
@@ -81,6 +86,9 @@ location fit_feature(feature ft, Mat image)
 	for (int i = radius; i < image.cols-radius; i=i+trans_step) {
 		for (int j = radius; j < image.rows-radius; j=j+trans_step) {
 			//circle for rotation
+			//int i = 799; int j = 107;
+
+			Mat1b mask(image.size(), uchar(0));
 			circle(mask, Point(i, j), radius, Scalar(255), CV_FILLED);
 			// Compute the bounding box
 			Rect bbox(i, j, 2 * radius, 2 * radius);
@@ -94,24 +102,41 @@ location fit_feature(feature ft, Mat image)
 			// Crop according to the roi
 			area = area(bbox);
 			Moments areaM = moments(area);
-			double area_angle = ((atan2(double(2 * areaM.nu11), double(areaM.nu20 - areaM.nu02))) / 2) * 180 / 3.1415;
-			double delta_angle = area_angle - stuff_angle;
+			double indexA = (areaM.nu20 + areaM.nu02) / areaM.m00;
+			//cout << "index feature: " << index_stuff << "   index section: " << indexA;
 
-			//cv::imshow("area to compare", res);
+			//Compare invariants
+			if (indexA > index_stuff* (1.0 - variance) && indexA < index_stuff* (1.0 + variance)) {
+				double area_angle = ((atan2(double(2 * areaM.nu11), double(areaM.nu20 - areaM.nu02))) / 2) * 180 / 3.1415 + 90;
+				double delta_angle = stuff_angle - area_angle;
+				//cout << "\nobject angle: " << stuff_angle << "  area angle: " << area_angle << "  delta angle: " << delta_angle;
 
-			for (int k = delta_angle-sideways_range; k < delta_angle + sideways_range; k=k+rot_step) {
-				double angle = k;
+				// Compare angles
+				if (abs(delta_angle) < expected_rotation) {
+					for (int k = delta_angle - sideways_range; k < delta_angle + sideways_range+1; k = k + rot_step) {
+						double angle = k;
 
-				// get rotation matrix for rotating the image around its center in pixel coordinates
-				cv::Mat rot = cv::getRotationMatrix2D(centre, angle, 1.0);
-				Mat compare;
-				warpAffine(area, compare, rot, area.size());
+						// get rotation matrix for rotating the image around its center in pixel coordinates
+						cv::Mat rot = cv::getRotationMatrix2D(centre, angle, 1.0);
+						Mat rotated;
+						warpAffine(area, rotated, rot, area.size());
+						Mat comparing = rotated(Rect(radius - ro_x, radius - ro_y, m, n));
+						Mat error;
+						bitwise_xor(comparing, stuff, error);
+						float difference = abs(bin_m00(error));
+
+						if (difference < found.error) {
+							found.x = i; found.y = j; found.angle = angle;
+							found.error = difference; found.overlap = error;
+							cout << "\nError: " << found.error << "   x: " << found.x << "   y: " << found.y << "   rho: " << found.angle;
+						}
+					}
+				}
 			}
 		}
 	}
 	return found;
 }
-
 
 int first_image(const char* source)
 {
@@ -158,3 +183,98 @@ int first_image(const char* source)
 	return 0;
 }
 
+int try_fit_feature(Mat object, Mat image) {
+	feature thing;
+
+	cvtColor(object, object, CV_BGR2GRAY);
+	bitwise_not(object, object);
+	cvtColor(image, image, CV_BGR2GRAY);
+	bitwise_not(image, image);
+	imshow("searching", object);
+
+	thing.picture = object;
+	thing.M = moments(thing.picture);
+	thing.o_x = thing.M.m10 / thing.M.m00;
+	thing.o_y = thing.M.m01 / thing.M.m00;
+	
+	location spot = fit_feature(thing, image);
+	rectangle(image, Rect(spot.x - thing.o_x, spot.y-thing.o_y, 2* thing.o_x, 2* thing.o_y), 200); //Draw finding
+	imshow("found", image);
+	imshow("overlap", spot.overlap);
+
+	cvWaitKey();
+
+	return 0;
+}
+*/
+
+
+location solve_puzzle(feature ft, Mat image)
+{
+	int expected_rotation = 90; int variance = 1.5;
+	int trans_step = 10; int rot_step = 5; int sideways_range = 40;
+
+	//Initialize position
+	location found;
+	Mat stuff = ft.picture;
+	double index_stuff = (ft.M.nu20 + ft.M.nu02) / ft.M.m00;
+	double stuff_angle = ((atan2(double(2 * ft.M.nu11), double(ft.M.nu20 - ft.M.nu02))) / 2) * 180 / 3.1415 + 90;
+	int n = stuff.rows; int m = stuff.cols;
+	float ro_x = (m - 1.0) / 2.0; float ro_y = (n - 1.0) / 2.0;
+	double radius = sqrt(((m - 1.0) / 2.0) * ((m - 1.0) / 2.0) + ((n - 1.0) / 2.0) * ((n - 1.0) / 2.0));
+	Point2f centre(radius, radius);
+
+	for (int i = radius; i < image.cols - radius; i = i + trans_step) {
+		for (int j = radius; j < image.rows - radius; j = j + trans_step) {
+			//circle for rotation
+			//int i = 799; int j = 107;
+
+			Mat1b mask(image.size(), uchar(0));
+			circle(mask, Point(i, j), radius, Scalar(255), CV_FILLED);
+			// Compute the bounding box
+			Rect bbox(i, j, 2 * radius, 2 * radius);
+			// Create a black image
+			//Mat res;
+			// Copy only the image under the white circle to black image
+			//image.copyTo(res, mask);
+			Mat area(image.rows + 2 * radius, image.cols + 2 * radius, image.type());
+			image.copyTo(area(cv::Rect(radius, radius, image.cols, image.rows)), mask);
+
+			// Crop according to the roi
+			area = area(bbox);
+			Moments areaM = moments(area);
+			double indexA = (areaM.nu20 + areaM.nu02) / areaM.m00;
+			//cout << "index feature: " << index_stuff << "   index section: " << indexA;
+
+			//Compare invariants
+			if (indexA > index_stuff* (1.0 - variance) && indexA < index_stuff * (1.0 + variance)) {
+				double area_angle = ((atan2(double(2 * areaM.nu11), double(areaM.nu20 - areaM.nu02))) / 2) * 180 / 3.1415 + 90;
+				double delta_angle = stuff_angle - area_angle;
+				//cout << "\nobject angle: " << stuff_angle << "  area angle: " << area_angle << "  delta angle: " << delta_angle;
+
+				// Compare angles
+				if (abs(delta_angle) < expected_rotation) {
+					for (int k = delta_angle - sideways_range; k < delta_angle + sideways_range + 1; k = k + rot_step) {
+						double angle = k;
+
+						// get rotation matrix for rotating the image around its center in pixel coordinates
+						cv::Mat rot = cv::getRotationMatrix2D(centre, angle, 1.0);
+						Mat rotated;
+						warpAffine(area, rotated, rot, area.size());
+						Mat comparing = rotated(Rect(radius - ro_x, radius - ro_y, m, n));
+						Mat error;
+						bitwise_xor(comparing, stuff, error);
+						float difference = abs(bin_m00(error));
+
+						if (difference < found.error) {
+							found.x = i; found.y = j; found.angle = angle;
+							found.error = difference; found.overlap = error;
+							cout << "\nError: " << found.error << "   x: " << found.x << "   y: " << found.y << "   rho: " << found.angle;
+						}
+					}
+				}
+			}
+		}
+	}
+	return found;
+}
