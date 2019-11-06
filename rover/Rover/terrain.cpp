@@ -64,7 +64,7 @@ Mat firmament(Mat pic, double wanted_ratio, int minmass=3) {
 		else if (too_much && M.m00 > minmass) break;
 	}
 
-	std::cout << "\n\n>> Constellations created: \n    The mass of the image is: " << M.m00 << "\n    The star-sky ratio is: " << island_ratio << "\n    Threshold: " << local_treshold;
+	//std::cout << "\n\n>> Constellations created: \n    The mass of the image is: " << M.m00 << "\n    The star-sky ratio is: " << island_ratio << "\n    Threshold: " << local_treshold;
 	return bin_pic;
 }
 Mat firmament_AxBregions(Mat pic, double wanted_ratio, int A, int B, int minmass = 3, int margin = 10)
@@ -87,7 +87,7 @@ Mat firmament_AxBregions(Mat pic, double wanted_ratio, int A, int B, int minmass
 	threshold(full_sky, full_sky, 0.4, 1.0, THRESH_BINARY);
 
 	Mat selective_sky = Mat::zeros(pic.size(), CV_8UC1);;
-	A = 4; B = 4; 
+	A = 8; B = 8; 
 	m = (pic.rows - 2 * margin) / A;
 	n = (pic.cols - 2 * margin) / A;
 	for (int i = 0; i < A * B; i++) {
@@ -99,14 +99,21 @@ Mat firmament_AxBregions(Mat pic, double wanted_ratio, int A, int B, int minmass
 		Moments M = moments(partial_sky);
 		if ((M.m00) != 0) {
 			vector<Point> search = locate_stars(partial_sky);
-			line(selective_sky, search[1], search[1], 255, 1);
+			line(selective_sky, search[0], search[0], 255, 1);
 		}
 	}
 
 	return selective_sky;
 }
 
-
+//Show feature locations
+int show_locations(string name, picture p) {
+	for (int i = 0; i < p.locations.size(); i++) {
+		circle(p.original, p.locations[i], 10, 200, 1, 8);
+	}
+	imshow(name, p.original);
+	return 0;
+}
 
 //OLD
 /*
@@ -315,8 +322,8 @@ picture preprocessing(Mat pic)
 	p.locations = locate_stars(star_pic);
 
 	//Show stuff
-	imshow("pic", pic);
-	imshow("dif", dif);
+	//imshow("pic", pic);
+	//imshow("dif", dif);
 	//imshow("spots", star_pic);
 
 	return p;
@@ -324,16 +331,11 @@ picture preprocessing(Mat pic)
 
 
 int test(Mat pic1, Mat pic2) {
-	picture p1;
+	picture p1, p2;
 	p1 = preprocessing(pic1);
-
-	//Show stuff
-	Mat ver;
-	p1.original.copyTo(ver);
-	for (int i = 0; i < p1.locations.size(); i++) {
-		circle(ver, p1.locations[i], 10, 200, 1, 8);
-	}
-	imshow("locations", ver);
+	p2 = preprocessing(pic2);
+	show_locations("p1", p1);
+	show_locations("p2", p2);
 
 	cvWaitKey();
 	return 0;

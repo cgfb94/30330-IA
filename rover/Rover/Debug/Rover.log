@@ -1,4 +1,2 @@
-﻿  terrain.cpp
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(45,16): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(333,20): warning C4018: '<': signed/unsigned mismatch
+﻿  main.cpp
   Rover.vcxproj -> D:\joaro\Documents\GitHub\30330-IA\rover\Debug\Rover.exe
