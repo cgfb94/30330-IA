@@ -26,5 +26,14 @@ struct region
 	int pos_x; int pos_y;
 };
 
-int try_fit_feature(Mat object, Mat image);
+struct picture
+{
+	Mat original;
+	Mat diferential;
+	Mat starfield;
+	vector<Point> locations;
+	//int spots[2][100];
+};
+
+int test(Mat object, Mat image);
 
