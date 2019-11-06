@@ -45,34 +45,76 @@ Mat firmament(Mat pic, double wanted_ratio) {
 	return bin_pic;
 }
 
-//Search for nearby stars
-int bodysearch(Mat sky_pic, point centre) {
-
-	return 0;
-}
-
-region get_region(Mat light_pic, Mat shadow_pic, int mat_side) {
+region brake_in_AxB_features(Mat light_pic, int A, int B) {
 	region captured;
 	Mat show_regions = light_pic;
-	int m = light_pic.rows / mat_side;
-	int n = light_pic.cols / mat_side;
+	int m = light_pic.rows / A;
+	int n = light_pic.cols / A;
 
-	for (int i = 0; i < mat_side*mat_side; i++) {
-		int r = i % mat_side; int s = i / mat_side;
+	for (int i = 0; i < A*B; i++) {
+		int r = i % A; int s = i / A;
 		captured.light_feature[i].picture = light_pic(Rect(r, s, n, m));
-		captured.dark_feature[i].picture = shadow_pic(Rect(r, s, n, m));
-
-
+		captured.light_feature[i].M = moments(captured.light_feature[i].picture, 1);
+		captured.light_feature[i].o_x = captured.light_feature[i].M.m10 / captured.light_feature[i].M.m00;
+		captured.light_feature[i].o_y = captured.light_feature[i].M.m01 / captured.light_feature[i].M.m00;
+		captured.pos_x = r; captured.pos_y = s;
+		
 		//rectangle(show_regions, Rect(r * n, s * m, n, m), 200); //Draw grid
 	}
-	imshow("sections", show_regions);
+	cv::imshow("sections", show_regions);
 	return captured;
+}
+
+
+location fit_feature(feature ft, Mat image)
+{
+	int trans_step = 1; int rot_step = 5; int sideways_range = 5;
+	location found;
+	Mat stuff = ft.picture;
+	double stuff_angle = ((atan2(double(2 * ft.M.nu11), double(ft.M.nu20 - ft.M.nu02)))/2)*180/3.1415;
+	int n = stuff.rows; int m = stuff.cols;
+	Mat1b mask(image.size(), uchar(0));
+	float ro_x = (m - 1.0) / 2.0; float ro_y = (n - 1.0) / 2.0;
+	double radius = sqrt(((m - 1.0) / 2.0)* ((m - 1.0) / 2.0) + ((n - 1.0) / 2.0)* ((n - 1.0) / 2.0));
+	Point2f centre(radius, radius);
+
+	for (int i = radius; i < image.cols-radius; i=i+trans_step) {
+		for (int j = radius; j < image.rows-radius; j=j+trans_step) {
+			//circle for rotation
+			circle(mask, Point(i, j), radius, Scalar(255), CV_FILLED);
+			// Compute the bounding box
+			Rect bbox(i, j, 2 * radius, 2 * radius);
+			// Create a black image
+			//Mat res;
+			// Copy only the image under the white circle to black image
+			//image.copyTo(res, mask);
+			Mat area(image.rows + 2 * radius, image.cols + 2 * radius, image.type());
+			image.copyTo(area(cv::Rect(radius, radius, image.cols, image.rows)), mask);
+
+			// Crop according to the roi
+			area = area(bbox);
+			Moments areaM = moments(area);
+			double area_angle = ((atan2(double(2 * areaM.nu11), double(areaM.nu20 - areaM.nu02))) / 2) * 180 / 3.1415;
+			double delta_angle = area_angle - stuff_angle;
+
+			//cv::imshow("area to compare", res);
+
+			for (int k = delta_angle-sideways_range; k < delta_angle + sideways_range; k=k+rot_step) {
+				double angle = k;
+
+				// get rotation matrix for rotating the image around its center in pixel coordinates
+				cv::Mat rot = cv::getRotationMatrix2D(centre, angle, 1.0);
+				Mat compare;
+				warpAffine(area, compare, rot, area.size());
+			}
+		}
+	}
+	return found;
 }
 
 
 int first_image(const char* source)
 {
-	location pos;
 	Mat inv_pic_RGB, inv_pic, pic;
 
 	Mat pic_RGB = imread(source, 1);
@@ -95,17 +137,20 @@ int first_image(const char* source)
 	
 	//Remove big shadows
 	//Find dark spots and turn them into stars
-	Mat dark_pic = dist_transf_slopes(inv_pic_RGB, 150, THRESH_BINARY);
-	Mat sky_pic;
+	//Mat dark_pic = dist_transf_slopes(inv_pic_RGB, 150, THRESH_BINARY);
+	//Mat sky_pic;
 	//star_pic.convertTo(star_pic, dark_pic.type());
-	add(star_pic, dark_pic, sky_pic);
+	//add(star_pic, dark_pic, sky_pic);
 
 
 	//GET INFO
-	region data = get_region(star_pic, dark_pic, 6);
+	region data = brake_in_AxB_features(star_pic, 6, 6);
+
+	fit_feature(data.light_feature[5], star_pic);
+
 
 	//SHOW IMAGES IN NEW WINDOWS 
-	imshow("random region", Mat(data.light_feature[5].picture));
+	cv::imshow("random region", Mat(data.light_feature[5].picture));
 	//imshow("dark_pic", Mat(dark_pic));
 	//imshow("sky_pic", Mat(sky_pic));
 

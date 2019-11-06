@@ -20,9 +20,6 @@ int circle(const char* source);
 int hist(IplImage source);
 IplImage* webcam_capture(void);	// #TODO change webcam capture to return an IpImage
 
-struct location {
-	float x; float y; float z; float angle;
-};
 int first_image(const char* source);
 cv::Mat watershed_regions(cv::Mat pic_RGB, int bin_threshold, int bin_type);
 cv::Mat dist_transf_slopes(cv::Mat pic_RGB, int bin_threshold, int bin_type);

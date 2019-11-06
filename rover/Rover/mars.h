@@ -6,11 +6,10 @@
 using namespace cv; using namespace std;
 
 
-struct point {
-	bool light;
-	float x; float y;
-	float near_dist[10];
-	float near_angle[10];
+struct location {
+	float x; float y; float z;
+	float angle;
+	float error=100000000;
 };
 
 struct feature
@@ -24,6 +23,7 @@ struct region
 {
 	feature light_feature[36];
 	feature dark_feature[36];
+	int pos_x; int pos_y;
 };
 
 
