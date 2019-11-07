@@ -7,7 +7,6 @@
 
 // to find cwd
 #include <direct.h>
-
 #include <iostream>
 #include <math.h>
 #include <algorithm>

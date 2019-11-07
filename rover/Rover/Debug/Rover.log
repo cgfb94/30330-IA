@@ -1,4 +1,11 @@
 ﻿  terrain.cpp
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(45,16): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
-D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(114,20): warning C4018: '<': signed/unsigned mismatch
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(53,16): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(122,20): warning C4018: '<': signed/unsigned mismatch
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(367,17): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(384,21): warning C4018: '<': signed/unsigned mismatch
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(400,37): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(421,36): warning C4838: conversion from 'unsigned int' to 'int' requires a narrowing conversion
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(421,61): warning C4838: conversion from 'unsigned int' to 'int' requires a narrowing conversion
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(465,20): warning C4018: '<': signed/unsigned mismatch
+D:\joaro\Documents\GitHub\30330-IA\rover\Rover\terrain.cpp(466,21): warning C4018: '<': signed/unsigned mismatch
   Rover.vcxproj -> D:\joaro\Documents\GitHub\30330-IA\rover\Debug\Rover.exe
