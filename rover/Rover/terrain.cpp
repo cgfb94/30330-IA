@@ -67,8 +67,10 @@ Mat firmament(Mat pic, double wanted_ratio, int minmass=3) {
 	//std::cout << "\n\n>> Constellations created: \n    The mass of the image is: " << M.m00 << "\n    The star-sky ratio is: " << island_ratio << "\n    Threshold: " << local_treshold;
 	return bin_pic;
 }
-Mat firmament_AxBregions(Mat pic, double wanted_ratio, int A, int B, int minmass = 3, int margin = 10)
+Mat firmament_AxBregions(Mat pic, double wanted_ratio, int sky_regions[2], int scope_regions[2], int minmass = 3, int margin = 10)
 {
+	int A = sky_regions[0]; int B = sky_regions[1];
+
 	Mat full_sky = Mat::zeros(pic.size(), CV_32F);
 	int m = (pic.rows-2*margin) / A;
 	int n = (pic.cols-2*margin) / A;
@@ -86,8 +88,9 @@ Mat firmament_AxBregions(Mat pic, double wanted_ratio, int A, int B, int minmass
 	full_sky.convertTo(full_sky, CV_8UC1);
 	threshold(full_sky, full_sky, 0.4, 1.0, THRESH_BINARY);
 
+	A = scope_regions[0]; B = scope_regions[1];
+
 	Mat selective_sky = Mat::zeros(pic.size(), CV_8UC1);;
-	A = 8; B = 8; 
 	m = (pic.rows - 2 * margin) / A;
 	n = (pic.cols - 2 * margin) / A;
 	for (int i = 0; i < A * B; i++) {
@@ -277,7 +280,7 @@ int try_fit_feature(Mat object, Mat image) {
 }
 */
 
-picture preprocessing(Mat pic)
+picture preprocessing(Mat pic, int sky_regions[2], int scope_regions[2])
 {
 	//Mat pic = imread(source, 1);
 	resize(pic, pic, Size(), 0.4, 0.4);
@@ -307,7 +310,7 @@ picture preprocessing(Mat pic)
 	//Find light spots and turn them into stars
 	Mat star_pic;
 
-	star_pic = firmament_AxBregions(dif, 0, 2,2);
+	star_pic = firmament_AxBregions(dif, 0, sky_regions, scope_regions);
 	//normalize(star_pic, star_pic, 0, 1.0, NORM_MINMAX);
 	//star_pic.convertTo(star_pic, CV_8UC1);
 	//threshold(star_pic, star_pic, 0.4, 1.0, THRESH_BINARY);
@@ -332,8 +335,10 @@ picture preprocessing(Mat pic)
 
 int test(Mat pic1, Mat pic2) {
 	picture p1, p2;
-	p1 = preprocessing(pic1);
-	p2 = preprocessing(pic2);
+	int sky_regions[2] = { 3, 3 };
+	int scope_regions[2] = { 6, 6 };
+	p1 = preprocessing(pic1, sky_regions, scope_regions);
+	p2 = preprocessing(pic2, sky_regions, scope_regions);
 	show_locations("p1", p1);
 	show_locations("p2", p2);
 
