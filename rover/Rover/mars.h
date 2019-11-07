@@ -32,6 +32,7 @@ struct picture
 	Mat diferential;
 	Mat starfield;
 	vector<Point> locations;
+	location captured_from;
 	//int spots[2][100];
 };
 

@@ -282,12 +282,9 @@ int try_fit_feature(Mat object, Mat image) {
 
 picture preprocessing(Mat pic, int sky_regions[2], int scope_regions[2])
 {
-	//Mat pic = imread(source, 1);
-	resize(pic, pic, Size(), 0.4, 0.4);
-
 	//TURN TO GRAYSCALE
 	//Mat gray_pic(pic.size(), CV_8U);
-	cvtColor(pic, pic, CV_BGR2GRAY);
+	if (pic.channels() == 3)  cvtColor(pic, pic, CV_BGR2GRAY);
 
 	//REMOVE SOME NOISE
 	//pic2 = ex4::remove_SaltPepper(pic, 1);
@@ -333,14 +330,33 @@ picture preprocessing(Mat pic, int sky_regions[2], int scope_regions[2])
 }
 
 
+
 int test(Mat pic1, Mat pic2) {
+	
+	resize(pic1, pic1, Size(), 0.4, 0.4); resize(pic2, pic2, Size(), 0.4, 0.4);
+
+	// PREPROCESS - Preselect interesting landmarks. Set center of coordinates.
 	picture p1, p2;
 	int sky_regions[2] = { 3, 3 };
 	int scope_regions[2] = { 6, 6 };
 	p1 = preprocessing(pic1, sky_regions, scope_regions);
+	p1.captured_from.error = 0;
 	p2 = preprocessing(pic2, sky_regions, scope_regions);
 	show_locations("p1", p1);
 	show_locations("p2", p2);
+
+	//COMPARE TWO PICTURES - Function that checks for coincidences between previously chosen landmarks. Returns identifiers of matching spots,
+	//						 locations (and angle) in both pictures, and a weighted estimation of the error.			 
+
+
+	//ORDER MATCHINGS BY ERROR - Calculate a global error for the whole operation.
+
+	//CALCULATE NEW POSITION - Choose best (x) matchings and infer position and orientation of picture 2.
+
+	//CALCULATE ABSOLUTE COORDINATES OF LANDMARKS - Calculate absolute coordinates of all found landmarks.
+
+	//[OPTIONAL] Verify if the rest of the matches are correct by comparing absolute coordinates. If more matches are found, error decreases.
+	// When a match is found, the landmark information is merged. The coordinate info is averaged. The saved picture is the ¿sharpest one?
 
 	cvWaitKey();
 	return 0;
