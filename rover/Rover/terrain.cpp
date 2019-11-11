@@ -3,10 +3,10 @@
 
 #include "mars.h"
 #include "rover.h"
+#include "opencv2/opencv_modules.hpp"
 
 using namespace std;
 using namespace cv;
-
 
 //Calculate mass
 float bin_m00(Mat img) {
@@ -40,13 +40,94 @@ int count_objects(Mat img) {
 //Get star locations
 vector<Point> locate_stars(Mat sky)
 {
+	vector<Point> stars; 
+
+		int pos = 0;
+		for (int i = 0; i < sky.cols; i++) for (int j = 0; j < sky.rows; j++) if (sky.at<uchar>(Point(i, j)) > 0) {
+			stars.push_back(Point(i, j));
+			pos++;
+		}
+
+	//findNonZero(sky, stars);
+	return stars;
+}
+vector<Point> locate_stars1(Mat sky, int n_regions, int iter = 4)
+{
 	vector<Point> stars;
-	findNonZero(sky, stars);
+	Moments M = moments(sky);
+	Point centre(M.m10 / M.m00, M.m01 / M.m00);
+	int radmax = (sky.cols + sky.rows) / 1.25;
+	int delta_rad = radmax / (iter * n_regions);
+
+	for (int rad = delta_rad; rad <= radmax; rad = rad + delta_rad) {
+		Mat1b mask(sky.size(), uchar(0));
+		circle(mask, centre, rad, Scalar(255), CV_FILLED);
+		circle(mask, centre, rad - delta_rad, Scalar(0), CV_FILLED);
+		Mat area;
+		sky.copyTo(area, mask);
+
+		int pos = 0;
+		for (int i = 0; i < area.cols; i++) for (int j = 0; j < area.rows; j++) if (area.at<uchar>(Point(i, j)) > 0) {
+			stars.push_back(Point(i, j));
+			pos++;
+		}
+	}
+	//findNonZero(sky, stars);
 	return stars;
 }
 
-//Create night sky
-Mat firmament(Mat pic, double wanted_ratio, int minmass=3) {
+// Distance between two points
+float euclideanDist(Point p, Point q) {
+	Point diff = p - q;
+	return sqrt(diff.x * diff.x + diff.y * diff.y);
+}
+
+// Compute distance between all points
+float*** all_rel_positions(vector<Point> point) {
+	int n = point.size();	
+	
+	//Create 3D matrix of relative distances and angles
+	float*** rel_pos; int data_per_point = 2;
+	rel_pos = new float** [data_per_point];
+	for (int k = 0; k < data_per_point; k++) {
+		rel_pos[k] = new float* [n];
+		for (int i = 0; i < n; i++) rel_pos[k][i] = new float[n];
+	}
+
+
+	//Fill matrix with data
+	for (int i = 0; i < n; i++) {
+		for (int j = i; j < n; j++) {
+
+			// Distance data
+			if (i == j) rel_pos[0][i][j] = 0;
+			else rel_pos[0][i][j] = euclideanDist(point[i], point[j]);
+			rel_pos[0][j][i] = rel_pos[0][i][j];
+			
+			// Angle data
+			if (i == j) {
+				rel_pos[1][i][j] = 0;
+				rel_pos[1][j][i] = 0;
+			}
+			else {
+				float dx = point[j].x - point[i].x;
+				float dy = point[j].y - point[i].y;
+				rel_pos[1][i][j] = atan2(dy, dx);
+				rel_pos[1][j][i] = rel_pos[1][i][j] + 3.14159265;
+				cout << "\n Angle: " << i << " - " << j << " --> " << rel_pos[1][i][j] * 180.0 / 3.14159265;
+			}
+		}
+	}
+	
+	cout << "\n\n\n:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n\n\n";
+	return rel_pos;
+	//index 1 --> distance/angle data
+	//index 2 --> point 0 index in locations vector
+	//index 3 --> point 1 index in locations vector
+}
+
+//Create night sky - COULD BE OPTIMIZED TO BEGIN WITH MASS ZERO AND END WITH MINMASS.
+Mat firmament(Mat pic, double wanted_ratio, int minmass=8) {
 	Mat bin_pic;
 	float island_ratio = 1; float mass = 0;
 	int local_treshold = 0;
@@ -75,7 +156,8 @@ Mat firmament(Mat pic, double wanted_ratio, int minmass=3) {
 	//std::cout << "\n\n>> Constellations created: \n    The mass of the image is: " << M.m00 << "\n    The star-sky ratio is: " << island_ratio << "\n    Threshold: " << local_treshold;
 	return bin_pic;
 }
-Mat firmament_AxBregions(Mat pic, double wanted_ratio, int sky_regions[2], int scope_regions[2], int minmass = 3, int margin = 30)
+
+Mat firmament_AxBregions(Mat pic, double wanted_ratio, int sky_regions[2], int scope_regions[2], int starsXregion = 1, int min_star_distance = 5, int min_region_mass = 8, int margin = 10)
 {
 	int A = sky_regions[0]; int B = sky_regions[1];
 
@@ -88,7 +170,7 @@ Mat firmament_AxBregions(Mat pic, double wanted_ratio, int sky_regions[2], int s
 		Mat1b mask(pic.size(), uchar(0));
 		rectangle(mask, Rect(r*n+margin, s*m+margin, n, m), Scalar(255), CV_FILLED);
 		pic.copyTo(partial_sky, mask);
-		partial_sky = firmament(partial_sky, wanted_ratio);
+		partial_sky = firmament(partial_sky, wanted_ratio, min_region_mass);
 		normalize(partial_sky, partial_sky, 0, 255, NORM_MINMAX);
 		bitwise_or(full_sky, partial_sky, full_sky);
 	}
@@ -98,7 +180,7 @@ Mat firmament_AxBregions(Mat pic, double wanted_ratio, int sky_regions[2], int s
 
 	A = scope_regions[0]; B = scope_regions[1];
 
-	Mat selective_sky = Mat::zeros(pic.size(), CV_8UC1);;
+	Mat selective_sky = Mat::zeros(pic.size(), CV_8UC1);
 	m = (pic.rows - 2 * margin) / A;
 	n = (pic.cols - 2 * margin) / A;
 	for (int i = 0; i < A * B; i++) {
@@ -110,7 +192,13 @@ Mat firmament_AxBregions(Mat pic, double wanted_ratio, int sky_regions[2], int s
 		Moments M = moments(partial_sky);
 		if ((M.m00) != 0) {
 			vector<Point> search = locate_stars(partial_sky);
-			line(selective_sky, search[0], search[0], 255, 1);
+			for (int i = 0; i < starsXregion; i++) {
+				if (i >= search.size()) break;
+				else {
+					circle(selective_sky, search[i], min_star_distance, Scalar(0), CV_FILLED);
+					line(selective_sky, search[i], search[i], 255, 1);
+				}
+			}
 		}
 	}
 
@@ -118,13 +206,325 @@ Mat firmament_AxBregions(Mat pic, double wanted_ratio, int sky_regions[2], int s
 }
 
 //Show feature locations
-int show_locations(string name, picture p) {
+int print_locations(string name, picture p, bool show=true) {
 	for (int i = 0; i < p.locations.size(); i++) {
 		circle(p.original, p.locations[i], 10, 200, 1, 8);
+		putText(p.original,to_string(i), p.locations[i], FONT_HERSHEY_COMPLEX_SMALL, 0.5, 0);
 	}
-	imshow(name, p.original);
+	if(show) imshow(name, p.original);
 	return 0;
 }
+
+picture preprocessing(Mat pic, int blur, int blur0, int diff, int sky_regions[2], int scope_regions[2], int starsXregion, int min_star_distance, int min_region_mass, int margin=10)
+{
+	//TURN TO GRAYSCALE
+	//Mat gray_pic(pic.size(), CV_8U);
+	if (pic.channels() == 3)  cvtColor(pic, pic, CV_BGR2GRAY);
+
+	//REMOVE SOME NOISE
+	//pic2 = ex4::remove_SaltPepper(pic, 1);
+	cv::blur(pic, pic, Size(blur0, blur0));
+	medianBlur(pic, pic, blur);
+
+	//LAPLACIAN FILTER
+	Mat aux, dif;
+	Laplacian(pic, aux, CV_16S, diff);
+	convertScaleAbs(aux, dif);
+	aux.release();
+
+	//CREATE INVERTED PICTURE
+	//bitwise_not(pic_RGB, inv_pic_RGB);
+
+	//CREATE CONSTELLATIONS
+	threshold(dif, dif, 150, 255, THRESH_BINARY | THRESH_OTSU);
+	// Perform the distance transform algorithm
+	Mat dist;
+	distanceTransform(dif, dif, 2, 3);
+	//Find light spots and turn them into stars
+	Mat star_pic;
+
+	star_pic = firmament_AxBregions(dif, 0, sky_regions, scope_regions, starsXregion, min_star_distance, min_region_mass, margin);
+	//normalize(star_pic, star_pic, 0, 1.0, NORM_MINMAX);
+	//star_pic.convertTo(star_pic, CV_8UC1);
+	//threshold(star_pic, star_pic, 0.4, 1.0, THRESH_BINARY);
+
+	//TRANSFER DATA TO STRUCTURE
+	picture p;
+	p.diferential = dif;
+	p.original = pic;
+	p.starfield = star_pic;
+
+	//GET STAR LOCATIONS
+	p.locations = locate_stars(star_pic);
+
+	//Show stuff
+	//imshow("pic", pic);
+	//imshow("dif", dif);
+	//imshow("spots", star_pic);
+
+	return p;
+}
+
+
+float overlap_square(Mat A, Mat B, int rot_step, int rot_range, double tol=0) {
+	//NEEDS SQUARE MATS!!!!!!
+	float error = 100000;
+
+	//Convert matrixes to allow negative values
+	A.convertTo(A, CV_16S); B.convertTo(B, CV_16S);
+
+	int a = A.rows; Point centreA = { a,a };
+	int b = B.rows; Point centreB = { b,b };
+	if (b < a) {
+		cout << "\n\nERROR: [in function overlap_square()] --> B must be equal or bigger than A.\n\n";
+		return -1;
+	}
+	
+	//Calculate angle with moments... (future update)
+	//double angles[2] = { 0, 0 };
+	//double delta_angle = angles[1] - angles[0];
+	double delta_angle = 0;
+
+	//compare
+
+	// ANGLE SHIFT
+	for (int angle = delta_angle; angle <= rot_range; angle = angle + rot_step) {
+
+		vector<Mat> rotA;
+		if (angle == 0) {
+			rotA = { A };
+		}
+		else {
+			Mat M, N;
+			//Case (+)
+			cv::Mat rot = cv::getRotationMatrix2D(centreA, angle, 1.0); //PLAY WITH THE SCALE!!!
+			warpAffine(A, M, rot, A.size());
+			//Case (-)
+			rot = cv::getRotationMatrix2D(centreA, -angle, 1.0);
+			warpAffine(A, N, rot, A.size());
+			rotA = { M, N };
+		}
+
+		for (int i = 0; i < rotA.size(); i++) {
+			Mat A2 = rotA[i];
+
+			//POSITION SHIFT
+			//Calculate play
+			int h = (b - a)/2;
+			int marg = (a - 1) / 2;
+
+			for (int x = marg; x < b - marg; x++)
+			{
+				for (int y = marg; y < b - marg; y++)
+				{
+					Mat B2 = get_subpic(B, Point(x, y), a);
+					Mat diff = Mat::zeros(A2.size(), CV_16S);
+					diff = A2 - B2;
+					double new_error = abs(sum(diff)[0]);
+					if (new_error < error) error = new_error;
+					if (error < tol) return error;
+
+					//cout << "\nOverlap error: " << error << "  X: " << x << "  Y: " << y << "  angle: " << angle << " (+/-) " << i;
+				}
+			}
+			
+		}
+	}
+	return error;
+}
+
+
+
+float** compare_features_SQUARES(vector<picture> img, int size1, int size2, int rot_step, int rot_range) {
+	
+	//Check if input sizes are odd, if not, correct.
+	if (size1 % 2 == 0) size1--; if (size2 % 2 == 0) size2--;
+
+	int size[2] = { size1, size2 };
+	int n[2] = { img[0].locations.size(), img[1].locations.size() };
+	
+	// Get pictures
+	vector<vector<Mat>> feat(2);
+	for (int i = 0; i < 2; i++) {
+		feat[i] = img[i].get_landmark_pics(size[i]);
+	}
+
+	// Compare pictures
+
+	//Matrix of errors
+	float** err;
+	err = new float* [n[0]];				
+	for (int i = 0; i < n[0]; i++) err[i] = new float[n[1]];
+
+	for (int i = 0; i < n[0]; i++) {
+		for (int j = 0; j < n[1]; j++) {
+			err[i][j] = overlap_square(feat[0][i], feat[1][j], rot_step, rot_range);
+		}
+	}
+
+	return err;
+}
+
+float** compare_features_STARS(vector<picture> img, float angle_tol, float dist_tol, float distance_range) {
+	
+	int n[2] = { img[0].locations.size(), img[1].locations.size() };
+
+	float**** data = new float*** [2];
+	// Calculate all relative positions of stars in both pictures
+	data[0] = all_rel_positions(img[0].locations);
+	data[1] = all_rel_positions(img[1].locations);
+	//data[0][1][2][3] :
+	//  index 0 --> image 0 or 1 data
+	//  index 1 --> distance/angle data
+	//  index 2 --> point 0 index in locations vector
+	//  index 3 --> point 1 index in locations vector
+
+
+	// Search for coincidences in datasets
+	float** accuracy;
+	accuracy = new float* [n[0]];
+	for (int i = 0; i < n[0]; i++) { 
+		accuracy[i] = new float[n[1]]; 
+		for (int j = 0; j < n[1]; j++) accuracy[i][j] = 0;
+	}
+
+	//Full version
+	for (int i = 0; i < n[0]; i++) {
+		for (int iA = 0; iA < n[0]; iA++) {
+		if (iA!=i && data[0][0][i][iA] < distance_range) {
+		for (int iB = 0; iB < n[0]; iB++) {
+		if (iB != i && iB != iA && data[0][0][i][iB] < distance_range) {
+			//Get d_angle from pic1
+			for (int j = 0; j < n[1]; j++) {
+				for (int jA = 0; jA < n[1]; jA++) {
+				if (jA != j && data[1][0][j][jA] < distance_range) {
+				for (int jB = 0; jB < n[1]; jB++) {
+				if (jB != j && jB != jA && data[1][0][j][jB] < distance_range) {
+						float d_angle_0 = data[0][1][i][iA] - data[0][1][i][iB];
+						float d_angle_1 = data[1][1][j][jA] - data[1][1][j][jB];
+						float dist_factor = data[0][0][i][iA] / data[0][0][i][iB] - data[1][0][j][jA] / data[1][0][j][jB];
+						if (abs(d_angle_1 - d_angle_0) <= angle_tol && dist_factor <= dist_tol) accuracy[i][j]++;
+				}
+				}
+				}
+				}
+			}
+		}
+		}
+		}
+		}
+	}
+
+	return accuracy;
+}
+
+
+int test(Mat pic1, Mat pic2) {
+
+	resize(pic1, pic1, Size(), 0.4, 0.4); resize(pic2, pic2, Size(), 0.4, 0.4);
+
+	// PREPROCESS - Preselect interesting landmarks. Set center of coordinates.
+#pragma region Parameters
+	int blur0 = 5;
+	int blur = 5;
+	int diff = 9;
+	int sky_regions[2] = { 3, 3 };
+	int scope_regions[2] = { 1, 1 };
+	int starsXregion = 10000;
+	int min_star_separation = 5;
+	int min_region_mass = 30;
+
+	int SQUARE1_size = 0;
+	int SQUARE2_size = 0;
+#pragma endregion
+
+	picture p1, p2;	
+	p1 = preprocessing(pic1, blur, blur0, diff, sky_regions, scope_regions, starsXregion, min_star_separation, min_region_mass, (SQUARE1_size+1)/2);
+	p1.captured_from.error = 0;
+	p2 = preprocessing(pic2, blur, blur0, diff, sky_regions, scope_regions, starsXregion, min_star_separation, min_region_mass, (SQUARE2_size+1)/2);
+
+	print_locations("p1", p1);
+	print_locations("p2", p2);
+	
+	
+	//COMPARE TWO PICTURES - Function that checks for coincidences between previously chosen landmarks. Returns identifiers of matching spots
+	//						 and a weighted estimation of the error.			 
+	vector<picture> com_Pair = { p1, p2 };
+	// 1
+	//float** divergence = compare_features_SQUARES(com_Pair, SQUARE1_size, SQUARE2_size, 1, 1); // 
+	/*
+	// output all square comparison results
+	for (int i = 0; i < p1.locations.size(); i++) {
+		for (int j = 0; j < p2.locations.size(); j++) {
+			cout << "\n error " << i << " - " << j << " --> " << divergence[i][j];
+			if (divergence[i][j] < 2) cout << " <<<<<<<<<< match !!!!!!!!!!!";
+		}
+	}
+	*/
+
+	// 2 
+	float** coincidence = compare_features_STARS(com_Pair, 0.5 * 3.14159 / 180, 5, 40);
+	
+	////Output all ANGLE comparison results
+	int max_match = 0;
+	for (int i = 0; i < p1.locations.size(); i++) {
+		for (int j = 0; j < p2.locations.size(); j++) {
+			if (coincidence[i][j] > max_match) max_match = coincidence[i][j];
+			//output text
+			cout << "\n Accuracy: " << i << " - " << j << " --> " << coincidence[i][j];
+			if (coincidence[i][j] > 10) cout << " <<<<<<<<<< MATCH !!!!!!!!!!!";
+		}
+	}
+
+	//ORDER MATCHINGS BY ERROR - Calculate a global error for the whole operation.
+	square_matchings found;
+	// 1
+	//found.retrieve_SQUARE_matchings(divergence, p1.locations.size(), p2.locations.size(), 3);	
+	// 2
+	found.retrieve_ANGLE_matchings(coincidence, p1.locations.size(), p2.locations.size(), max_match-1, max_match);
+
+	int i = 0;
+	cout << "\n Num found = " << found.num_found;
+	for (int i = 0; i < found.num_found; i++) {
+		cout << "\n" << found.match_ref[0][i] << " Error " << found.match_ref[1][i] << " - " << found.match_ref[2][i] << " --> " << found.match_ref[3][i];
+		putText(p1.original, "<-" + to_string(found.match_ref[0][i]), p1.locations[found.match_ref[1][i]], FONT_HERSHEY_COMPLEX_SMALL, 0.8, 255);
+		putText(p2.original, "<-" + to_string(found.match_ref[0][i]), p2.locations[found.match_ref[2][i]], FONT_HERSHEY_COMPLEX_SMALL, 0.8, 255);
+	}
+
+	imshow("pic1", p1.original);
+	imshow("pic2", p2.original);
+
+	//CALCULATE NEW POSITION - Choose best (x) matchings and infer position and orientation of picture 2.
+
+	//CALCULATE ABSOLUTE COORDINATES OF LANDMARKS - Calculate absolute coordinates of all found landmarks.
+
+	//[OPTIONAL] Verify if the rest of the matches are correct by comparing absolute coordinates. If more matches are found, error decreases.
+	// When a match is found, the landmark information is merged. The coordinate info is averaged. The saved picture is the ¿sharpest one?
+
+	cvWaitKey();
+	getch();
+
+	return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //OLD
 /*
@@ -169,7 +569,7 @@ int first_image(const char* source)
 	//CREATE CONSTELLATIONS
 	//Find light spots and turn them into stars
 	Mat star_pic = dist_transf_slopes(pic_RGB, 150, THRESH_BINARY);
-	
+
 	//Remove big shadows
 	//Find dark spots and turn them into stars
 	//Mat dark_pic = dist_transf_slopes(inv_pic_RGB, 150, THRESH_BINARY);
@@ -184,7 +584,7 @@ int first_image(const char* source)
 	fit_feature(data.light_feature[5], star_pic);
 
 
-	//SHOW IMAGES IN NEW WINDOWS 
+	//SHOW IMAGES IN NEW WINDOWS
 	cv::imshow("random region", Mat(data.light_feature[5].picture));
 	//imshow("dark_pic", Mat(dark_pic));
 	//imshow("sky_pic", Mat(sky_pic));
@@ -206,7 +606,7 @@ int try_fit_feature(Mat object, Mat image) {
 	thing.M = moments(thing.picture);
 	thing.o_x = thing.M.m10 / thing.M.m00;
 	thing.o_y = thing.M.m01 / thing.M.m00;
-	
+
 	location spot = fit_feature(thing, image);
 	rectangle(image, Rect(spot.x - thing.o_x, spot.y-thing.o_y, 2* thing.o_x, 2* thing.o_y), 200); //Draw finding
 	imshow("found", image);
@@ -216,59 +616,7 @@ int try_fit_feature(Mat object, Mat image) {
 
 	return 0;
 }
-*/
 
-picture preprocessing(Mat pic, int sky_regions[2], int scope_regions[2])
-{
-	//TURN TO GRAYSCALE
-	//Mat gray_pic(pic.size(), CV_8U);
-	if (pic.channels() == 3)  cvtColor(pic, pic, CV_BGR2GRAY);
-
-	//REMOVE SOME NOISE
-	//pic2 = ex4::remove_SaltPepper(pic, 1);
-	medianBlur(pic, pic, 9);
-
-	//LAPLACIAN FILTER
-	Mat aux, dif;
-	Laplacian(pic, aux, CV_16S, 5);
-	convertScaleAbs(aux, dif);
-	aux.release();
-
-	//CREATE INVERTED PICTURE
-	//bitwise_not(pic_RGB, inv_pic_RGB);
-
-	//CREATE CONSTELLATIONS
-	threshold(dif, dif, 150, 255, THRESH_BINARY | THRESH_OTSU);
-	// Perform the distance transform algorithm
-	Mat dist;
-	distanceTransform(dif, dif, 2, 3);
-	//Find light spots and turn them into stars
-	Mat star_pic;
-
-	star_pic = firmament_AxBregions(dif, 0, sky_regions, scope_regions);
-	//normalize(star_pic, star_pic, 0, 1.0, NORM_MINMAX);
-	//star_pic.convertTo(star_pic, CV_8UC1);
-	//threshold(star_pic, star_pic, 0.4, 1.0, THRESH_BINARY);
-
-	//TRANSFER DATA TO STRUCTURE
-	picture p;
-	p.diferential = dif;
-	p.original = pic;
-	p.starfield = star_pic;
-
-	//GET STAR LOCATIONS
-	p.locations = locate_stars(star_pic);
-
-	//Show stuff
-	//imshow("pic", pic);
-	//imshow("dif", dif);
-	//imshow("spots", star_pic);
-
-	return p;
-}
-
-//OLD
-/* ------------------------------------------------------------------------------------------------------------
 location fit_feature(feature ft, Mat image)
 {
 	int expected_rotation = 90; int variance = 1.5;
@@ -338,150 +686,5 @@ location fit_feature(feature ft, Mat image)
 	}
 	return found;
 }
-// ------------------------------------------------------------------------------------------------------------*/
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-float overlap_square(Mat A, Mat B, int rot_step, int rot_range, double tol=0) {
-	//NEEDS SQUARE MATS!!!!!!
-	float error = 100000;
-
-	//Convert matrixes to allow negative values
-	A.convertTo(A, CV_16S); B.convertTo(B, CV_16S);
-
-	int a = A.rows; Point centreA = { a,a };
-	int b = B.rows; Point centreB = { b,b };
-	if (b < a) {
-		cout << "\n\nERROR: [in function overlap_square()] --> B must be equal or bigger than A.\n\n";
-		return -1;
-	}
-	
-	//Calculate angle with moments... (future update)
-	//double angles[2] = { 0, 0 };
-	//double delta_angle = angles[1] - angles[0];
-	double delta_angle = 0;
-
-	//compare
-
-	// ANGLE SHIFT
-	for (int angle = delta_angle; angle < rot_range; angle = angle + rot_step) {
-
-		vector<Mat> rotA;
-		if (angle == 0) {
-			rotA = { A };
-		}
-		else {
-			Mat M, N;
-			//Case (+)
-			cv::Mat rot = cv::getRotationMatrix2D(centreA, angle, 1.0);
-			warpAffine(A, M, rot, A.size());
-			//Case (-)
-			rot = cv::getRotationMatrix2D(centreA, -angle, 1.0);
-			warpAffine(A, N, rot, A.size());
-			rotA = { M, N };
-		}
-
-		for (int i = 0; i < rotA.size(); i++) {
-			Mat A2 = rotA[i];
-
-			//POSITION SHIFT
-			//Calculate play
-			int h = (b - a)/2;
-			int marg = (a - 1) / 2;
-
-			for (int x = marg; x < b - marg; x++)
-			{
-				for (int y = marg; y < b - marg; y++)
-				{
-					Mat B2 = get_subpic(B, Point(x, y), a);
-					Mat diff = Mat::zeros(A2.size(), CV_16S);
-					diff = A2 - B2;
-					double new_error = abs(sum(diff)[0]);
-					if (new_error < error) error = new_error;
-					if (error < tol) return error;
-
-					//cout << "\nOverlap error: " << error << "  X: " << x << "  Y: " << y << "  angle: " << angle << " (+/-) " << i;
-				}
-			}
-			
-		}
-	}
-	return error;
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-float** compare_features(vector<picture> img, int size1, int size2, int rot_step, int rot_range) {
-	
-	//Check if input sizes are odd, if not, correct.
-	if (size1 % 2 == 0) size1--; if (size2 % 2 == 0) size2--;
-
-	int size[2] = { size1, size2 };
-	int n[2] = { img[0].locations.size(), img[1].locations.size() };
-	
-	// Get pictures
-	vector<vector<Mat>> feat(2);
-	for (int i = 0; i < 2; i++) {
-		feat[i] = img[i].get_landmark_pics(size[i]);
-	}
-
-	// Compare pictures
-
-	//Matrix of errors
-	float** err;
-	err = new float* [n[0]];				
-	for (int i = 0; i < n[0]; i++) err[i] = new float[n[1]];
-
-	for (int i = 0; i < n[0]; i++) {
-		for (int j = 0; j < n[1]; j++) {
-			err[i][j] = overlap_square(feat[0][i], feat[1][j], rot_step, rot_range);
-		}
-	}
-
-	return err;
-}
-
-
-int test(Mat pic1, Mat pic2) {
-	
-	resize(pic1, pic1, Size(), 0.4, 0.4); resize(pic2, pic2, Size(), 0.4, 0.4);
-
-	// PREPROCESS - Preselect interesting landmarks. Set center of coordinates.
-	picture p1, p2;
-	int sky_regions[2] = { 3, 3 };
-	int scope_regions[2] = { 6, 6 };
-	p1 = preprocessing(pic1, sky_regions, scope_regions);
-	p1.captured_from.error = 0;
-	p2 = preprocessing(pic2, sky_regions, scope_regions);
-	//show_locations("p1", p1);
-	//show_locations("p2", p2);
-
-	//COMPARE TWO PICTURES - Function that checks for coincidences between previously chosen landmarks. Returns identifiers of matching spots
-	//						 and a weighted estimation of the error.			 
-	vector<picture> com_Pair = { p1, p2 };
-	float** divergence = compare_features(com_Pair, 9, 15, 5, 5);
-	
-	for (int i = 0; i < p1.locations.size(); i++) {
-		for (int j = 0; j < p2.locations.size(); j++) {
-			cout << "\n Error " << i << " - " << j << " --> " << divergence[i][j];
-			if (divergence[i][j] < 2) cout << " <<<<<<<<<< MATCH !!!!!!!!!!!";
-		}
-	}
-
-	//ORDER MATCHINGS BY ERROR - Calculate a global error for the whole operation.
-
-	
-
-	//CALCULATE NEW POSITION - Choose best (x) matchings and infer position and orientation of picture 2.
-
-	//CALCULATE ABSOLUTE COORDINATES OF LANDMARKS - Calculate absolute coordinates of all found landmarks.
-
-	//[OPTIONAL] Verify if the rest of the matches are correct by comparing absolute coordinates. If more matches are found, error decreases.
-	// When a match is found, the landmark information is merged. The coordinate info is averaged. The saved picture is the ¿sharpest one?
-
-	//cvWaitKey();
-	getch();
-
-	return 0;
-}
+// ------------------------------------------------------------------------------------------------------------
+*/

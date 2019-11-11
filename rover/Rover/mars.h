@@ -26,14 +26,63 @@ struct region
 	int pos_x; int pos_y;
 };
 
-class matchings
-{
-	static const int MAX_MATCHINGS = 50;
-	static const int MAX_CAPTURES = 50;
-	int ref_in_pic[MAX_CAPTURES][MAX_MATCHINGS];
 
-	matchings() {
-		for (int i = 0; i < MAX_CAPTURES; i++) for (int j = 0; j < MAX_MATCHINGS; j++) ref_in_pic[i][j] = -1;
+class square_matchings
+{
+public:
+	static const int MAX_MATCHINGS = 10;
+	//static const int MAX_CAPTURES = 50;
+	int match_ref[4][MAX_MATCHINGS];
+	// [0] --> number
+	// [1] --> ref in pic1
+	// [2] --> ref in pic2
+	// [3] --> discrepancy
+	int num_found;
+
+	square_matchings() {
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < MAX_MATCHINGS; j++) {
+				if (i == 0) match_ref[0][j] = j + 1;
+				else match_ref[i][j] = -1;
+			}
+		}
+		num_found = 0;
+	}
+
+	void retrieve_SQUARE_matchings(float** weights, int n, int m, int max_error) {
+		int full = 0;
+		for (int k = 0; k <= max_error; k++) {
+			for (int i = 0; i < n; i++) {
+				for (int j = 0; j < m; j++) {
+					if (weights[i][j] == k){
+						if (full >= MAX_MATCHINGS) break;
+						match_ref[1][full] = i;
+						match_ref[2][full] = j;
+						match_ref[3][full] = k;
+						full++;
+					}
+				}
+			}
+		}
+		num_found = full;
+	}
+
+	void retrieve_ANGLE_matchings(float** weights, int n, int m, int min_accuracy, int max_match) {
+		int full = 0;
+		for (int k = max_match; k >= min_accuracy; k--) {
+			for (int i = 0; i < n; i++) {
+				for (int j = 0; j < m; j++) {
+					if (weights[i][j] == k) {
+						if (full >= MAX_MATCHINGS) break;
+						match_ref[1][full] = i;
+						match_ref[2][full] = j;
+						match_ref[3][full] = k;
+						full++;
+					}
+				}
+			}
+		}
+		num_found = full;
 	}
 };
 

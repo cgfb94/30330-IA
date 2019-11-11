@@ -7,8 +7,8 @@
 int main(int argc, char* argv[])
 {
 	//IplImage* Image = webcam_capture();
-	std::string imPath1 =  utils::getAbsImagePath("Images\\mars6.jpeg");
-	std::string imPath2 =  utils::getAbsImagePath("Images\\mars5.jpeg");
+	std::string imPath1 =  utils::getAbsImagePath("Images\\mars5.jpeg");
+	std::string imPath2 =  utils::getAbsImagePath("Images\\mars6.jpeg");
 	// Produce some contour images
 	//if (ex4::contour(imPath.c_str())) return 1;
 
