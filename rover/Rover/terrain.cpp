@@ -153,17 +153,10 @@ Mat firmament(Mat pic, double wanted_ratio, int minmass=8) {
 		else if (too_much && M.m00 > minmass) break;
 	}
 
-<<<<<<< HEAD
 	std::cout << "\n\n>> Constellations created: \n    The mass of the image is: " << M.m00 << "\n    The star-sky ratio is: " << island_ratio << "\n    Threshold: " << local_treshold;
 	return bin_pic;
 }
 
-//Search for nearby stars
-int bodysearch(Mat sky_pic, Point centre) {
-=======
-	//std::cout << "\n\n>> Constellations created: \n    The mass of the image is: " << M.m00 << "\n    The star-sky ratio is: " << island_ratio << "\n    Threshold: " << local_treshold;
-	return bin_pic;
-}
 
 Mat firmament_AxBregions(Mat pic, double wanted_ratio, int sky_regions[2], int scope_regions[2], int starsXregion = 1, int min_star_distance = 5, int min_region_mass = 8, int margin = 10)
 {
@@ -209,7 +202,6 @@ Mat firmament_AxBregions(Mat pic, double wanted_ratio, int sky_regions[2], int s
 			}
 		}
 	}
->>>>>>> Joaquin
 
 	return selective_sky;
 }
@@ -224,26 +216,26 @@ int print_locations(string name, picture p, bool show=true) {
 	return 0;
 }
 
-<<<<<<< HEAD
 region brake_in_AxB_regions(Mat light_pic, int A, int B) {
 	region captured;
 	Mat show_regions = light_pic;
 	int m = light_pic.rows / A;
 	int n = light_pic.cols / A;
 
-	for (int i = 0; i < A*B; i++) {
+	for (int i = 0; i < A * B; i++) {
 		int r = i % A; int s = i / A;
 		captured.light_feature[i].picture = light_pic(Rect(r, s, n, m));
 		captured.light_feature[i].M = moments(captured.light_feature[i].picture, 1);
 		captured.light_feature[i].o_x = captured.light_feature[i].M.m10 / captured.light_feature[i].M.m00;
 		captured.light_feature[i].o_y = captured.light_feature[i].M.m01 / captured.light_feature[i].M.m00;
 		captured.pos_x = r; captured.pos_y = s;
-		
+
 		//rectangle(show_regions, Rect(r * n, s * m, n, m), 200); //Draw grid
 	}
 	imshow("sections", show_regions);
 	return captured;
-=======
+}
+
 picture preprocessing(Mat pic, int blur, int blur0, int diff, int sky_regions[2], int scope_regions[2], int starsXregion, int min_star_distance, int min_region_mass, int margin=10)
 {
 	//TURN TO GRAYSCALE
@@ -360,13 +352,11 @@ float overlap_square(Mat A, Mat B, int rot_step, int rot_range, double tol=0) {
 		}
 	}
 	return error;
->>>>>>> Joaquin
 }
 
 
 
-<<<<<<< HEAD
-=======
+
 float** compare_features_SQUARES(vector<picture> img, int size1, int size2, int rot_step, int rot_range) {
 	
 	//Check if input sizes are odd, if not, correct.
@@ -410,7 +400,6 @@ float** compare_features_STARS(vector<picture> img, float angle_tol, float dist_
 	//  index 1 --> distance/angle data
 	//  index 2 --> point 0 index in locations vector
 	//  index 3 --> point 1 index in locations vector
->>>>>>> Joaquin
 
 
 	// Search for coincidences in datasets

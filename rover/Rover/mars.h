@@ -12,28 +12,6 @@ struct location {
 	Mat overlap;
 };
 
-<<<<<<< HEAD
-struct location {
-	float x; float y; float z;
-	float angle;
-	float error;
-};
-
-struct feature
-{
-	Mat picture;
-	int o_x; int o_y;
-	Moments M;
-};
-
-struct region
-{
-	feature light_feature[36];
-	feature dark_feature[36];
-	int pos_x; int pos_y;
-};
-
-=======
 struct feature
 {
 	Mat picture;
@@ -148,5 +126,5 @@ public:
 };
 
 int test(Mat object, Mat image);
->>>>>>> Joaquin
+
 
