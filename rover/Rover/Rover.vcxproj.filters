@@ -55,6 +55,7 @@
       <Filter>Source Files\utilities</Filter>
     </ClCompile>
     <ClCompile Include="terrain2.cpp">
+    <ClCompile Include="fourier.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
