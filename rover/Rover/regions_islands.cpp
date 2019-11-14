@@ -85,10 +85,8 @@ Mat watershed_regions(Mat pic_RGB, int bin_threshold, int bin_type) {
 	return dst;
 }
 
-Mat dist_transf_slopes(Mat pic_RGB, int bin_threshold, int bin_type) {
+Mat dist_transf_slopes(Mat pic, int bin_threshold, int bin_type) {
 
-	Mat pic;
-	cvtColor(pic_RGB, pic, COLOR_BGR2GRAY);
 	threshold(pic, pic, bin_threshold, 255, bin_type);
 	//imshow("Binary Image", pic);
 

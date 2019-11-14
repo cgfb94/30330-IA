@@ -19,7 +19,7 @@
     <Filter Include="Source Files\ex4">
       <UniqueIdentifier>{229f96c3-6657-4491-bf24-251a1b001446}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\convert">
+    <Filter Include="Source Files\utilities">
       <UniqueIdentifier>{b5fb3b79-c74d-4db2-90de-61e4e637f46e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -28,12 +28,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="hist.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="webcam_capture.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="circle.cpp">
@@ -49,10 +43,16 @@
       <Filter>Source Files\ex5</Filter>
     </ClCompile>
     <ClCompile Include="conversions.cpp">
-      <Filter>Source Files\convert</Filter>
+      <Filter>Source Files\utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="webcam_capture.cpp">
+      <Filter>Source Files\utilities</Filter>
     </ClCompile>
     <ClCompile Include="regions_islands.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="utils.cpp">
+      <Filter>Source Files\utilities</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
