@@ -15,6 +15,9 @@
 #include <string>
 
 int circle(const char* source);
+int circle(cv::Mat source, float dim = 1.0);
+cv::Mat fourier(const char* source);
+cv::Mat fourier(cv::Mat inputImage, cv::Mat(*function)(cv::Mat));
 
 int hist(IplImage source);
 IplImage* webcam_capture(void);	// #TODO change webcam capture to return an IpImage
@@ -26,6 +29,7 @@ cv::Mat dist_transf_slopes(cv::Mat pic_RGB, int bin_threshold, int bin_type);
 namespace utils
 {
 	std::string getAbsImagePath(const char* localPath);
+	cv::Mat loadImageG(std::string path, float scale = 0.4);
 }
 
 namespace ex4

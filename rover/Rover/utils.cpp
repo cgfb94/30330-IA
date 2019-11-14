@@ -16,4 +16,11 @@ namespace utils {
 		return imagePath;
 
 	}
+	cv::Mat loadImageG(string path, float scale) {
+		cv::Mat src, src2, src_gray;
+		src = cv::imread(path, 1);
+		cv::resize(src, src2, cv::Size(), scale, scale);
+		cvtColor(src, src_gray, CV_BGR2GRAY);
+		return src_gray;
+	}
 }
