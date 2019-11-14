@@ -46,7 +46,7 @@ Mat firmament(Mat pic, double wanted_ratio) {
 }
 
 //Search for nearby stars
-int bodysearch(Mat sky_pic, point centre) {
+int bodysearch(Mat sky_pic, Point centre) {
 
 	return 0;
 }
