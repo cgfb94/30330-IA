@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
 	
 	Mat pic1 = imread(imPath1.c_str(), 1);
 	Mat pic2 = imread(imPath2.c_str(), 1);
-	int x = test(pic1, pic2);
+	int x = test2(pic1, pic2);
 
 	return 0;
 }

@@ -79,8 +79,8 @@
       <AdditionalIncludeDirectories>C:\Dev\opencv\build\include;C:\Dev\opencv\build\include\opencv2;C:\Dev\opencv\build\include\opencv</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>C:\Dev\opencv\build\x86\vc14\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opencv_core2413d.lib;opencv_imgproc2413d.lib;opencv_highgui2413d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Dev\opencv\build\x86\vc14\lib;C:\Dev\opencv\build\include\opencv2</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opencv_core2413d.lib;opencv_imgproc2413d.lib;opencv_highgui2413d.lib;opencv_features2d2413d.lib;opencv_nonfree2413d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -128,6 +128,7 @@
     <ClCompile Include="ex4.cpp" />
     <ClCompile Include="regions_islands.cpp" />
     <ClCompile Include="terrain.cpp" />
+    <ClCompile Include="terrain2.cpp" />
     <ClCompile Include="utils.cpp" />
     <ClCompile Include="webcam_capture.cpp" />
   </ItemGroup>

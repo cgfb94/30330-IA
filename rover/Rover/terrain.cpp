@@ -541,13 +541,6 @@ int test(Mat pic1, Mat pic2) {
 
 
 
-
-
-
-
-
-
-
 //OLD
 /*
 region brake_in_AxB_features(Mat light_pic, int A, int B) {

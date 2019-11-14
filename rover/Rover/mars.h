@@ -126,5 +126,6 @@ public:
 };
 
 int test(Mat object, Mat image);
+int test2(Mat object, Mat image);
 
 
