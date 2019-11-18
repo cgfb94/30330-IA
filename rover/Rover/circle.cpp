@@ -30,17 +30,23 @@ int circle(const char* source)
 	/// Reduce the noise so we avoid false circle detection
 	for (int i(0); i < 1; ++i) 
 	{
-		medianBlur(src, src, 25);
-
+		medianBlur(src, src, 7);
+		blur(src, src, Size(3, 3));
 	}
 	/// Convert it to gray
 	//blur(src, src, Size(5,5));
 	cvtColor(src, src_gray, CV_BGR2GRAY);
-	//threshold(abs_dst, abs_dst, 40, 255, THRESH_OTSU);
+	
+	threshold(src_gray, src_gray, 40, 255, THRESH_TOZERO | THRESH_OTSU);
+	for (int i(0); i < 50; ++i) medianBlur(src_gray, src_gray, 7);
+	for (int i(0); i < 5; ++i) blur(src_gray, src_gray, Size(3, 3));
+	
+	//threshold(src_gray, src_gray, 40, 255, THRESH_TOZERO_INV | THRESH_OTSU);
 	Laplacian(src_gray, dst, ddepth, kernel_size, scale, delta, BORDER_DEFAULT);
-	//Canny(src_gray, abs_dst, 1, 10*10);
+	//Canny(src_gray, abs_dst, 20, 20*5);
 
 	convertScaleAbs(dst, abs_dst);
+	//threshold(abs_dst, abs_dst, 100, 255, THRESH_TOZERO | THRESH_OTSU);
 	
 
 
@@ -49,7 +55,7 @@ int circle(const char* source)
 	
 	//for (int i(0); i < 2; ++i) medianBlur(abs_dst, abs_dst, 5);
 	
-	HoughCircles(abs_dst, circles, CV_HOUGH_GRADIENT, 1, abs_dst.rows / 8, 50, 80, 150, 250);
+	HoughCircles(abs_dst, circles, CV_HOUGH_GRADIENT, 1, src_gray.rows / 8, 150, 15, 0, 0);
 	//HoughCircles();
 	
 

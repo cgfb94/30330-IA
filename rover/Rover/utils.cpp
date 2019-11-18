@@ -20,7 +20,7 @@ namespace utils {
 		cv::Mat src, src2, src_gray;
 		src = cv::imread(path, 1);
 		cv::resize(src, src2, cv::Size(), scale, scale);
-		cvtColor(src, src_gray, CV_BGR2GRAY);
+		cvtColor(src2, src_gray, CV_BGR2GRAY);
 		return src_gray;
 	}
 }

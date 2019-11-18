@@ -128,6 +128,7 @@
     <ClCompile Include="ex5.cpp" />
     <ClCompile Include="ex4.cpp" />
     <ClCompile Include="regions_islands.cpp" />
+    <ClCompile Include="threshold_exe.cpp" />
     <ClCompile Include="terrain.cpp" />
     <ClCompile Include="terrain2.cpp" />
     <ClCompile Include="utils.cpp" />
