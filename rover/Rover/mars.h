@@ -5,11 +5,18 @@
 
 using namespace cv; using namespace std;
 
+float euclideanDist(Point p, Point q);
+
 struct location {
-	float x=0; float y=0; float z=0;
+	Point2f traslation = { 0,0 };
+	Point2f abs_centre = { 0,0 };
+	float dz = 0;
+	float z = 1;
+	float d_angle = 0;
 	float angle=0;
+	float step_distance = 0;
 	float error = 100000;
-	Mat overlap;
+	Mat rel_homography;
 };
 
 struct feature
@@ -127,5 +134,6 @@ public:
 
 int test(Mat object, Mat image);
 int test2(Mat object, Mat image);
+int test3(Mat object, Mat image);
 
 

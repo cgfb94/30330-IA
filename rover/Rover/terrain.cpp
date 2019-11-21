@@ -29,6 +29,12 @@ Mat get_subpic(Mat original, Point spot, int n_pixels) {
 	return piece;
 }
 
+// Distance between two points
+float euclideanDist(Point p, Point q) {
+	Point diff = p - q;
+	return sqrt(diff.x * diff.x + diff.y * diff.y);
+};
+
 //Count objects (binary)
 int count_objects(Mat img) {
 	std::vector<std::vector<cv::Point>> contours;
@@ -76,11 +82,6 @@ vector<Point> locate_stars1(Mat sky, int n_regions, int iter = 4)
 	return stars;
 }
 
-// Distance between two points
-float euclideanDist(Point p, Point q) {
-	Point diff = p - q;
-	return sqrt(diff.x * diff.x + diff.y * diff.y);
-}
 
 // Compute distance between all points
 float*** all_rel_positions(vector<Point> point) {

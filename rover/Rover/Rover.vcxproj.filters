@@ -1,75 +1,24 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
-    <Filter Include="Source Files\ex5">
-      <UniqueIdentifier>{e938534a-5edb-4dad-ab63-6223fbf92dc8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\ex4">
-      <UniqueIdentifier>{229f96c3-6657-4491-bf24-251a1b001446}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\utilities">
-      <UniqueIdentifier>{b5fb3b79-c74d-4db2-90de-61e4e637f46e}</UniqueIdentifier>
-    </Filter>
+    <ClCompile Include="circle.cpp" />
+    <ClCompile Include="conversions.cpp" />
+    <ClCompile Include="fourier.cpp" />
+    <ClCompile Include="hist.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="ex5.cpp" />
+    <ClCompile Include="ex4.cpp" />
+    <ClCompile Include="regions_islands.cpp" />
+    <ClCompile Include="terrain.cpp" />
+    <ClCompile Include="terrain2.cpp" />
+    <ClCompile Include="utils.cpp" />
+    <ClCompile Include="webcam_capture.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="hist.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="circle.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="terrain.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ex4.cpp">
-      <Filter>Source Files\ex4</Filter>
-    </ClCompile>
-    <ClCompile Include="ex5.cpp">
-      <Filter>Source Files\ex5</Filter>
-    </ClCompile>
-    <ClCompile Include="conversions.cpp">
-      <Filter>Source Files\utilities</Filter>
-    </ClCompile>
-    <ClCompile Include="webcam_capture.cpp">
-      <Filter>Source Files\utilities</Filter>
-    </ClCompile>
-    <ClCompile Include="regions_islands.cpp">
-      <Filter>Source Files\utilities</Filter>
-    </ClCompile>
-    <ClCompile Include="utils.cpp">
-      <Filter>Source Files\utilities</Filter>
-    </ClCompile>
-    <ClCompile Include="terrain2.cpp">
-    <ClCompile Include="fourier.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
+    <ClInclude Include="mars.h" />
+    <ClInclude Include="rover.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="rover.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="mars.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="Images\mars4.jpeg">
-      <Filter>Resource Files</Filter>
-    </Image>
+    <Image Include="Images\mars4.jpeg" />
   </ItemGroup>
 </Project>
