@@ -18,6 +18,12 @@ using namespace std;
 using namespace cv;
 //using namespace xfeatures2d;
 
+Mat translateImg(Mat& img, int offsetx, int offsety) {
+	Mat trans_mat = (Mat_<double>(2, 3) << 1, 0, offsetx, 0, 1, offsety);
+	warpAffine(img, img, trans_mat, img.size());
+	return img;
+}
+
 picture newpic_relpos(picture previous, Mat pic2, int n_kp = 7, int method = 1) {
 
 	method = 1;
@@ -188,13 +194,13 @@ picture newpic_relpos(picture previous, Mat pic2, int n_kp = 7, int method = 1) 
 	// Get the correct relative measurements watching the loop results
 
 	// Using relative measurements compute absolute location
-	pos.z = pos.dz * previous.captured_from.z;
+	pos.z = (1/pos.dz) * previous.captured_from.z;
 	pos.angle = pos.d_angle + previous.captured_from.angle;
 	pos.abs_centre = pos.traslation + previous.captured_from.abs_centre;
 	pos.rel_homography = H;
 	pos.error = previous.captured_from.error;
 
-	// Return
+	// Return:
 	newpic.captured_from = pos;
 		return newpic;
 }
@@ -203,75 +209,69 @@ picture newpic_relpos(picture previous, Mat pic2, int n_kp = 7, int method = 1) 
 
 
 int display_map(vector<picture> piece) {
-	
+
 	int n = piece.size();
+	vector<vector<Point2f>> abs_points(n, vector<Point2f>(5));
 
 	float maxX = 0; float maxY = 0;
+	int diag = euclideanDist(Point2f(0, 0), Point2f(piece[0].original.rows, piece[0].original.rows));
 
 	for (int i = 0; i < n; i++) {
-		/*int X = abs(piece[i].captured_from.centre.x) + abs(piece[i].captured_from.corner[0].x);
-		int Y = abs(piece[i].captured_from.centre.y) + abs(piece[i].captured_from.corner[0].y);*/
+		int X = abs(piece[i].captured_from.abs_centre.x);
+		int Y = abs(piece[i].captured_from.abs_centre.y);
 		if (X > maxX) maxX = X;
 		if (Y > maxY) maxY = Y;
 	}
-	Point2f centre = { maxX, maxY };
+	Point2f centre = { maxX + diag/2, maxY + diag/2 };
 
-	Mat map(Size((int)maxX * 2, (int)maxY * 2), piece[0].original.type(), Scalar(0));
-	Mat map_see = cv::Mat::zeros(map.size(), CV_8U);
+	Mat map(Size((int)centre.x * 2, (int)centre.y * 2), piece[0].original.type(), Scalar(0));
+	//Mat map_see = cv::Mat::zeros(map.size(), CV_8U);
 	
-	// PIC 0
 	Point2f centre_aux = centre;
 
 	for (int j = 0; j < 2; j++) {
 		cout << "\n\nFRAME " << j;
 		Mat g = piece[j].original;
-		Mat map_aux = cv::Mat::zeros(map.size(), CV_32F);
+		Mat rot_aux = cv::Mat::zeros(g.size(), g.type());
+		Mat map_aux = cv::Mat::zeros(map.size(), g.type());
 		Mat map_mask = cv::Mat::zeros(map.size(), CV_8U);
-		centre_aux = centre_aux + piece[j].captured_from.centre;
+		centre_aux = centre - piece[j].captured_from.abs_centre;
 
-		vector<Point2f> a1 = {
-			Point2f(0, 0),
-			Point2f((float)g.cols, 0),
-			Point2f((float)g.cols, (float)g.rows),
-			Point2f(0, (float)g.rows)
+		Mat rot = cv::getRotationMatrix2D(Point2f(g.rows/2, g.cols/2), -piece[j].captured_from.angle, piece[0].captured_from.z / piece[j].captured_from.z);
+		warpAffine(g, rot_aux, rot, g.size());
+
+		std::vector<Point2f> rel_vec =
+		{
+			Point2f((float)0, (float)0),
+			Point2f((float)-g.cols / 2, (float)-g.rows / 2),
+			Point2f((float)g.cols / 2, (float)-g.rows / 2),
+			Point2f((float)g.cols / 2, (float)g.rows / 2),
+			Point2f((float)-g.cols / 2, (float)g.rows / 2)
 		};
+
+		for (int k = 0; k < rel_vec.size(); k++) {
+			abs_points[j][k].x = rot.at<double>(0, 0) * rel_vec[k].x + rot.at<double>(0, 1) * rel_vec[k].y + rot.at<double>(0, 2) + centre_aux.x;
+			abs_points[j][k].y = rot.at<double>(1, 0) * rel_vec[k].x + rot.at<double>(1, 1) * rel_vec[k].y + rot.at<double>(1, 2) + centre_aux.y;
+		}
+
+		Rect r = Rect(abs_points[j][1].x, abs_points[j][1].y, rot_aux.cols, rot_aux.rows);
+		rectangle(map, r, 255, 1);
+		rot_aux.copyTo(map(r));
 		
-		vector<Point2f> a2(4);
-
-		cout << "\n Centre: " << centre_aux << "\n Corners: \n" << a2;
-
-		piece[j].captured_from.rel_homography = getPerspectiveTransform(a1, a2); // findHomography(a1, a2, CV_RANSAC);
-		warpPerspective(g, map_aux, piece[j].captured_from.rel_homography, map.size());
-
-		map_mask(Rect(a2[0], a2[2])) = 255;
-		map_aux.convertTo(map_aux, map.type());
-		map_aux.copyTo(map, map_mask);
-		rectangle(map_see, Rect(a2[0], a2[2]), Scalar(255), 2);
-		circle(map_see, centre_aux, 10, Scalar(255), 2);
+		//warpPerspective(g, map_aux, piece[j].captured_from.rel_homography, map.size());
+		//map_mask(Rect(a2[0], a2[2])) = 255;
+		//map_aux.convertTo(map_aux, map.type());
+		//map_aux.copyTo(map, map_mask);
+		
+		line(map, abs_points[j][1], abs_points[j][1], 255, 1); line(map, abs_points[j][2], abs_points[j][3], 255, 1);
+		line(map, abs_points[j][3], abs_points[j][4], 255, 1); line(map, abs_points[j][4], abs_points[j][1], 255, 1);
+		circle(map, centre_aux, 5, Scalar(255), 2);
 	}
 
 
-	resize(map, map, Size(), 0.3, 0.3);
-	resize(map_see, map_see, Size(), 0.3, 0.3);
-	imshow("Full map", map);
-	imshow("Debug map", map_see);
-	return 0;
-}
-
-int display_map2(vector<picture> piece) {
+	resize(map, map, Size(), 0.5, 0.5);
 	
-	// Create map with correct size
-	int n = piece.size();
-	float maxX = 0; float maxY = 0;
-	for (int i = 0; i < n; i++) {
-		int X = abs(piece[i].captured_from.centre.x) + abs(piece[i].captured_from.corner[0].x);
-		int Y = abs(piece[i].captured_from.centre.y) + abs(piece[i].captured_from.corner[0].y);
-		if (X > maxX) maxX = X;
-		if (Y > maxY) maxY = Y;
-	}
-	Point2f centre = { maxX, maxY };
-
-
+	imshow("Full map", map);
 
 	return 0;
 }
@@ -418,7 +418,7 @@ int test3(Mat pic1, Mat pic2) {
 
 	frame.push_back(newpic_relpos(frame[0], pic2));
 	cout << "\nFrame (" << 1 << ") moved " << frame[1].captured_from.step_distance << "units -->  dX = " << frame[1].captured_from.traslation.x << ", dY = " << frame[1].captured_from.traslation.y << ", dZ = " << frame[1].captured_from.dz << "; dAngle =  " << frame[1].captured_from.angle;
-
+	cout << "\n                                   X = " << frame[1].captured_from.abs_centre.x << ",  Y = " << frame[1].captured_from.abs_centre.y << ",  Z = " << frame[1].captured_from.z;
 	display_map(frame);
 	
 	waitKey();
