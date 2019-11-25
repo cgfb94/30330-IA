@@ -10,6 +10,7 @@ float euclideanDist(Point p, Point q);
 struct location {
 	Point2f traslation = { 0,0 };
 	Point2f abs_centre = { 0,0 };
+	Point2f map_centre = { 0,0 };
 	float dz = 0;
 	float z = 1;
 	float d_angle = 0;
@@ -134,6 +135,6 @@ public:
 
 int test(Mat object, Mat image);
 int test2(Mat object, Mat image);
-int test3(Mat object, Mat image);
+int test3(vector<Mat> pics);
 
 

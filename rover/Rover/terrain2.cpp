@@ -24,6 +24,8 @@ Mat translateImg(Mat& img, int offsetx, int offsety) {
 	return img;
 }
 
+
+
 picture newpic_relpos(picture previous, Mat pic2, int n_kp = 7, int method = 1) {
 
 	method = 1;
@@ -180,6 +182,7 @@ picture newpic_relpos(picture previous, Mat pic2, int n_kp = 7, int method = 1) 
 		circle(aux, aux2[k], 10, Scalar(255), 2);
 	}
 	// ... then, compare both and get relative displacement between keypoints:
+
 	// Loop to verify results given by different keypoint couples:------------
 	pos.traslation.x = 0; pos.traslation.y = 0; float N = goodKP2.size();
 	for (int k = 0; k < N; k++) {
@@ -222,25 +225,34 @@ int display_map(vector<picture> piece) {
 		if (X > maxX) maxX = X;
 		if (Y > maxY) maxY = Y;
 	}
-	Point2f centre = { maxX + diag/2, maxY + diag/2 };
+	Point2f centre = { maxX + (int)(diag/2), maxY + (int)(diag/2) };
 
 	Mat map(Size((int)centre.x * 2, (int)centre.y * 2), piece[0].original.type(), Scalar(0));
 	//Mat map_see = cv::Mat::zeros(map.size(), CV_8U);
 	
 	Point2f centre_aux = centre;
 
-	for (int j = 0; j < 2; j++) {
-		cout << "\n\nFRAME " << j;
+	// DRAW IMAGES
+	for (int j = 0; j < n; j++) {
 		Mat g = piece[j].original;
+		Mat g_mask(g.size(), CV_8U, Scalar(255));
 		Mat rot_aux = cv::Mat::zeros(g.size(), g.type());
-		Mat map_aux = cv::Mat::zeros(map.size(), g.type());
 		Mat map_mask = cv::Mat::zeros(map.size(), CV_8U);
+
 		centre_aux = centre - piece[j].captured_from.abs_centre;
+		piece[j].captured_from.map_centre = centre_aux;
 
-		Mat rot = cv::getRotationMatrix2D(Point2f(g.rows/2, g.cols/2), -piece[j].captured_from.angle, piece[0].captured_from.z / piece[j].captured_from.z);
-		warpAffine(g, rot_aux, rot, g.size());
+		float scale = piece[j].captured_from.z / piece[0].captured_from.z;
 
-		std::vector<Point2f> rel_vec =
+		//Rotation and zoom
+		Mat H = getRotationMatrix2D(Point2f(g.cols/2, g.rows/2), -piece[j].captured_from.angle, scale);
+		//Translation
+		H.at<double>(0, 2) = centre_aux.x - g.cols * scale / 2; 
+		H.at<double>(1, 2) = centre_aux.y - g.rows * scale / 2;
+		warpAffine(g, rot_aux, H, map.size());
+		warpAffine(g_mask, map_mask, H, map.size());
+		
+ 		std::vector<Point2f> rel_vec =
 		{
 			Point2f((float)0, (float)0),
 			Point2f((float)-g.cols / 2, (float)-g.rows / 2),
@@ -250,22 +262,28 @@ int display_map(vector<picture> piece) {
 		};
 
 		for (int k = 0; k < rel_vec.size(); k++) {
-			abs_points[j][k].x = rot.at<double>(0, 0) * rel_vec[k].x + rot.at<double>(0, 1) * rel_vec[k].y + rot.at<double>(0, 2) + centre_aux.x;
-			abs_points[j][k].y = rot.at<double>(1, 0) * rel_vec[k].x + rot.at<double>(1, 1) * rel_vec[k].y + rot.at<double>(1, 2) + centre_aux.y;
+			abs_points[j][k].x = H.at<double>(0, 0) * rel_vec[k].x + H.at<double>(0, 1) * rel_vec[k].y + H.at<double>(0, 2) + g.cols * scale / 2;
+			abs_points[j][k].y = H.at<double>(1, 0) * rel_vec[k].x + H.at<double>(1, 1) * rel_vec[k].y + H.at<double>(1, 2) + g.rows * scale / 2;
 		}
 
-		Rect r = Rect(abs_points[j][1].x, abs_points[j][1].y, rot_aux.cols, rot_aux.rows);
-		rectangle(map, r, 255, 1);
-		rot_aux.copyTo(map(r));
+		rot_aux.copyTo(map, map_mask);
 		
 		//warpPerspective(g, map_aux, piece[j].captured_from.rel_homography, map.size());
 		//map_mask(Rect(a2[0], a2[2])) = 255;
 		//map_aux.convertTo(map_aux, map.type());
 		//map_aux.copyTo(map, map_mask);
 		
-		line(map, abs_points[j][1], abs_points[j][1], 255, 1); line(map, abs_points[j][2], abs_points[j][3], 255, 1);
-		line(map, abs_points[j][3], abs_points[j][4], 255, 1); line(map, abs_points[j][4], abs_points[j][1], 255, 1);
+		//line(map, abs_points[j][1], abs_points[j][1], 255, 1); line(map, abs_points[j][2], abs_points[j][3], 255, 1);
+		//line(map, abs_points[j][3], abs_points[j][4], 255, 1); line(map, abs_points[j][4], abs_points[j][1], 255, 1);
 		circle(map, centre_aux, 5, Scalar(255), 2);
+	}
+
+	// DRAW VECTORS
+	for (int j = 1; j < n; j++) {
+		arrowedLine(map, piece[j - 1].captured_from.map_centre, piece[j].captured_from.map_centre, Scalar(255), 2);
+		putText(map, "-(" + to_string(j) + ")", piece[j].captured_from.map_centre, FONT_HERSHEY_COMPLEX_SMALL, 1.5, 255, 2);
+		putText(map, " " + to_string((int)piece[j].captured_from.step_distance) + " pixels", Point2f((piece[j-1].captured_from.map_centre.x + piece[j].captured_from.map_centre.x)/2, (piece[j - 1].captured_from.map_centre.y + piece[j].captured_from.map_centre.y) / 2), FONT_HERSHEY_COMPLEX_SMALL, 1.1, 255, 2);
+		cout << "\n\nFrame " << j << " --> Drawn.";
 	}
 
 
@@ -398,27 +416,35 @@ int test2(Mat pic1_0, Mat pic2_0) {
 	return 0;
 }
 
-int test3(Mat pic1, Mat pic2) {
-	resize(pic1, pic1, Size(), 0.4, 0.4); resize(pic2, pic2, Size(), 0.4, 0.4);
-	cout << "\n >> Picture size: " << pic1.cols << " x " << pic1.rows << "\n";
-	if (pic1.channels() == 3)  cvtColor(pic1, pic1, CV_BGR2GRAY);
-	if (pic2.channels() == 3)  cvtColor(pic2, pic2, CV_BGR2GRAY);
+int test3(vector<Mat> pic) {
+	int n = pic.size();
+
+	// 0 - (LOOP) PREPROCESSING
+	for (int i = 0; i < n; i++) {
+		resize(pic[i], pic[i], Size(), 0.4, 0.4);
+		if (pic[i].channels() == 3)  cvtColor(pic[i], pic[i], CV_BGR2GRAY);
+	}
+	cout << "\n >> Picture size: " << pic[0].cols << " x " << pic[0].rows << "\n";
 
 	vector<picture> frame(1);
 
-	//INITIALIZE ORIGIN
-	frame[0].original = pic1;
+	// 1 - INITIALIZE ORIGIN
+	frame[0].original = pic[0];
 	frame[0].captured_from.error = 0;
 	frame[0].captured_from.z = 20; //mm
 	//cout << "\nFrame (0): ORIGIN -->  dX = " << frame[0].captured_from.xo << ", dY = " << frame[0].captured_from.yo << ", dZ = " << frame[0].captured_from.z << "; dAngle =  " << frame[0].captured_from.angle;
 
-	// COMPUTE NEXT PICTURE
+	// 2 - (LOOP) COMPUTE NEXT PICTURES - RELATIVE AND ABSOLUTE POSITIONS
+	for (int i = 1; i < n; i++) {
+		cout << "\n\n>> FRAME " << i;
+		frame.push_back(newpic_relpos(frame[i - 1], pic[i]));
+		cout << "\nFrame (" << i << ") moved " << frame[i].captured_from.step_distance << "units -->  dX = " << frame[i].captured_from.traslation.x << ", dY = " << frame[i].captured_from.traslation.y << ", dZ = " << frame[i].captured_from.dz << "; dAngle =  " << frame[i].captured_from.angle;
+		cout << "\n                                   X = " << frame[i].captured_from.abs_centre.x << ",  Y = " << frame[i].captured_from.abs_centre.y << ",  Z = " << frame[i].captured_from.z;
 
-	//newframe_relpos(frame[0], pic2);
+	}
 
-	frame.push_back(newpic_relpos(frame[0], pic2));
-	cout << "\nFrame (" << 1 << ") moved " << frame[1].captured_from.step_distance << "units -->  dX = " << frame[1].captured_from.traslation.x << ", dY = " << frame[1].captured_from.traslation.y << ", dZ = " << frame[1].captured_from.dz << "; dAngle =  " << frame[1].captured_from.angle;
-	cout << "\n                                   X = " << frame[1].captured_from.abs_centre.x << ",  Y = " << frame[1].captured_from.abs_centre.y << ",  Z = " << frame[1].captured_from.z;
+	// 3 - DISPLAY COLLAGE
+	cout << "\n\n DRAWING AREA MAP:";
 	display_map(frame);
 	
 	waitKey();
