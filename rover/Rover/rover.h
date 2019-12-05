@@ -31,6 +31,7 @@ namespace utils
 {
 	std::string getAbsImagePath(const char* localPath);
 	cv::Mat loadImageG(std::string path, float scale = 0.4);
+	cv::Mat preproccess(cv::Mat src, float imscale = 1.0);
 }
 
 namespace ex4

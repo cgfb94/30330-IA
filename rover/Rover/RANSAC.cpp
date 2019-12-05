@@ -31,8 +31,10 @@
 // 	cv::line(img, p, q, color, LineWidth, cv::LINE_AA, 0);
 //}
 
-int my_RANSAC(cv::Mat img)
+vector<int> my_RANSAC(cv::Mat img, float r1, float r2)
 {
+	
+	
 	std::vector<std::shared_ptr<GRANSAC::AbstractParameter>> CandPoints;
 	int range{ img.cols * img.rows };
 
@@ -42,6 +44,7 @@ int my_RANSAC(cv::Mat img)
 		{
 			cv::Point Pt{ idx % img.cols, idx / img.cols }; 
 			std::shared_ptr<GRANSAC::AbstractParameter> CandPt = std::make_shared<Point2D>(Pt.x, Pt.y);
+						
 			CandPoints.push_back(CandPt);
 
 		}
@@ -49,7 +52,7 @@ int my_RANSAC(cv::Mat img)
 
 
 	GRANSAC::RANSAC<Circle2DModel, 3> Estimator;
-	Estimator.Initialize(7, 500); // Threshold, iterations
+	Estimator.Initialize(5, 1000, r1, r2); // Threshold, iterations
 	int64_t start = cv::getTickCount();
 	Estimator.Estimate(CandPoints);
 	int64_t end = cv::getTickCount();
@@ -70,6 +73,16 @@ int my_RANSAC(cv::Mat img)
 	}
 
 	auto BestLine = Estimator.GetBestModel();
+	if (!BestLine) { return vector<int> {}; }
+	int x = BestLine->m_x;
+	int y = BestLine->m_y; 
+	int r = BestLine->m_r;
+
+	
+
+
+	cv::circle(img, cv::Point(x, y), 5, cv::Scalar(0, 0, 255));
+	cv::circle(img, cv::Point(x, y), r, cv::Scalar(255, 100, 100));
 	if (BestLine)
 	{
 		auto BestLinePt1 = std::dynamic_pointer_cast<Point2D>(BestLine->GetModelParams()[0]);
@@ -83,17 +96,20 @@ int my_RANSAC(cv::Mat img)
 		}
 	}
 
-	while (true)
-	{
-		
-		cv::imshow("RANSAC Example", img);
+	return vector <int> {x, y, r};
 
-		char Key = cv::waitKey(1);
-		if (Key == 27)
-			return 0;
-		if (Key == ' ')
-			cv::imwrite("LineFitting.png", img);
-	}
+// 	while (true)
+// 	{
+// 		
+// 		cv::imshow("RANSAC Example", img);
+// 		imwrite("RANSAC.jpg", img);
+// 
+// 		char Key = cv::waitKey(1);
+// 		if (Key == 27)
+// 			return 0;
+// 		if (Key == ' ')
+// 			cv::imwrite("LineFitting.png", img);
+// 	}
 
-	return 0;
+	
 }

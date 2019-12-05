@@ -7,11 +7,14 @@
 #include <random>
 #include <tuple>
 
+vector <int> my_RANSAC(cv::Mat img, float r1, float r2);
+
 cv::Mat test(cv::Mat input) { return input; }
 
-cv::Mat preprocess(cv::Mat image) {
+cv::Mat preprocess_main(cv::Mat image, float dx = 1.0) {
 	Mat src;
 	image.copyTo(src);
+	cv::resize(src, src, Size(), dx, dx);
 	using namespace cv;
 	int kernel_size = 5;
 	int scale = 1;
@@ -32,15 +35,15 @@ cv::Mat preprocess(cv::Mat image) {
 	if (src.channels() == 3)  cvtColor(src, src, CV_BGR2GRAY);
 
 	threshold(src, src, 40, 255, THRESH_TOZERO | THRESH_OTSU);
-	for (int i(0); i < 50; ++i) medianBlur(src, src, 7);
-	for (int i(0); i < 5; ++i) blur(src, src, Size(3, 3));
+ 	for (int i(0); i < 50; ++i) medianBlur(src, src, 7);
+// 	for (int i(0); i < 5; ++i) blur(src, src, Size(3, 3));
 
 	//threshold(src_gray, src_gray, 40, 255, THRESH_TOZERO_INV | THRESH_OTSU);
-	Laplacian(src, dst, ddepth, kernel_size, scale, delta, BORDER_DEFAULT);
-	//Canny(src_gray, abs_dst, 20, 20*5);
-
-	convertScaleAbs(dst, abs_dst);
-
+	//Laplacian(src, dst, ddepth, kernel_size, scale, delta, BORDER_DEFAULT);
+	Canny(src, abs_dst, 20, 20*5);
+	
+	//convertScaleAbs(dst, abs_dst);
+	//threshold(abs_dst, abs_dst, 40, 255, THRESH_TOZERO | THRESH_OTSU);
 	return abs_dst;
 }
 
@@ -108,7 +111,7 @@ int cirlce_finder(cv::Mat Image)
 
 	int bordersize = 600;
 
-	src = preprocess(Image);
+	src = preprocess_main(Image);
 	copyMakeBorder(src, dst, bordersize, bordersize, bordersize, bordersize, BORDER_CONSTANT);
 	for (int i(0); i < dst.size().area(); i += 20)
 	{
@@ -155,21 +158,88 @@ int cirlce_finder(cv::Mat Image)
 
 
 int main(int argc, char* argv[])
+// iternate through the list of contours given by canny, find average gradient
+// of the last few points. split the contour if the gradient deviates from average
+// by too much and then continue search on other half of the contour
+// use the new list of contours to detect circles
 {
 	//IplImage* Image = webcam_capture();
 	std::string imPath1 =  utils::getAbsImagePath("Images\\mars5.jpeg");
-	std::string imPath2 =  utils::getAbsImagePath("Images\\mars6.jpeg");
+	std::string imPath2 =  utils::getAbsImagePath("Images\\mars2.jpeg");
 	// Produce some contour images
 	//if (ex4::contour(imPath.c_str())) return 1;
-	std::string impath = utils::getAbsImagePath("Images\\mars6.jpeg");
+	std::string impath = utils::getAbsImagePath("Images\\mars2.jpeg");
+	std::string impathTest = utils::getAbsImagePath("Images\\test123.png");
+	impath = impathTest;
+
 	//Look for circles
 	//cv::Mat fourierIm = fourier(impath.c_str());
 
 	//cv::Mat src = cv::imread(impath, 1);
 
-	cv::Mat image = (utils::loadImageG(impath));
+	//cv::Mat image = (utils::loadImageG(impath));
+	cv::Mat dst;
+	cv::Mat image = cv::imread(imPath2.c_str(), 1);
+	cv::resize(image, image, cv::Size(), 0.3, 0.3);
+	cv::Mat processed = preprocess_main(image, 1);
+	//processed = utils::preproccess(image, 0.3);
+	int bordersize = 10;
+	//processed = utils::loadImageG(impathTest, 0.5);
+	copyMakeBorder(processed, dst, bordersize, bordersize, bordersize, bordersize, BORDER_CONSTANT);
+	//collect the top 10 and plot in different colours
+	// restrict score by most complete circle
+	//imwrite("pre.jpg", dst);
+	float r1, r2;
+	r1 = 70;
+	r2 = 200;
 
-	cirlce_finder(image);
+	vector<int> results =  my_RANSAC(dst, r1, r2);
+
+	int x, y, r;
+	x = results[0] - bordersize;
+	y = results[1]- bordersize;
+	r = results[2];
+
+ 	cv::circle(image, cv::Point(x, y), 5, cv::Scalar(0, 0, 255));
+	cv::circle(image, cv::Point(x, y), r, cv::Scalar(255, 100, 100));
+
+	
+	cv::Point center = cv::Point(floor(image.cols / 2), floor(image.rows / 2));
+	cv::circle(image, center , 5, cv::Scalar(255, 255, 255));
+
+	cv::line(image, center, Point2d(x,y), cv::Scalar(255, 255, 255));
+
+	std::cout << "delta X: " << x - center.x << "\n delta Y: " << y - center.y << '\n';
+
+	cv::imshow("RANSAC Example", image);
+
+
+
+
+// 	Mat canny_output;
+// 	vector<vector<Point> > contours;
+// 	vector<Vec4i> hierarchy;
+// 
+// 	/// Detect edges using canny
+// 	Canny(processed, canny_output, 150, 150 * 2, 3);
+// 	/// Find contours
+// 	findContours(canny_output, contours, hierarchy, CV_RETR_LIST, CV_CHAIN_APPROX_NONE, Point(0, 0));
+// 
+// 	/// Draw contours
+// 	Mat drawing = Mat::zeros(canny_output.size(), CV_8UC3);
+// 	for (int i = 0; i < contours.size(); i++)
+// 	{
+// 		Scalar color = Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
+// 		drawContours(drawing, contours, i, color, 2, 8, hierarchy, 0, Point());
+// 	}
+// 
+// 	cv::imshow("Processed Image", drawing);
+// 
+// 	//circle(processed);
+// 
+// 	cv::waitKey();
+
+	//cirlce_finder(image);
 
 	//fourier(image, test);
 
@@ -189,8 +259,6 @@ int main(int argc, char* argv[])
 
 	//int x = test(pic1, pic2);
 
-
-	return 0;
 }
 
 

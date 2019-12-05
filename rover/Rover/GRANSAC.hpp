@@ -29,6 +29,9 @@ namespace GRANSAC
 		VPFloat m_BestModelScore; // The score of the best model
 		int m_BestModelIdx;
 
+		float mi_val;
+		float ma_val;
+
 		std::vector<std::mt19937> m_RandEngines; // Mersenne twister high quality RNG that support *OpenMP* multi-threading
 
 	public:
@@ -57,10 +60,13 @@ namespace GRANSAC
 			m_BestModelScore = 0.0;
 		};
 
-		void Initialize(VPFloat Threshold, int MaxIterations = 1000)
+		void Initialize(VPFloat Threshold, int MaxIterations = 1000, float min_val = 0.001, float max_val = 100000)
 		{
 			m_Threshold = Threshold;
 			m_MaxIterations = MaxIterations;
+			// Max min values to restrict parameter ie. radius
+			ma_val = max_val;
+			mi_val = min_val;
 		};
 
 		std::shared_ptr<T> GetBestModel(void) { return m_BestModel; };
@@ -70,7 +76,7 @@ namespace GRANSAC
 		{
 			if (Data.size() <= t_NumParams)
 			{
-				std::cerr << "[ WARN ]: RANSAC - Number of data points is too less. Not doing anything." << std::endl;
+				std::cerr << "[ WARN ]: RANSAC - Number of data points is too few. Not doing anything." << std::endl;
 				return false;
 			}
 
@@ -99,7 +105,7 @@ namespace GRANSAC
 				std::shared_ptr<T> RandomModel = std::make_shared<T>(RandomSamples);
 
 				// Check if the sampled model is the best so far
-				std::pair<VPFloat, std::vector<std::shared_ptr<AbstractParameter>>> EvalPair = RandomModel->Evaluate(RemainderSamples, m_Threshold);
+				std::pair<VPFloat, std::vector<std::shared_ptr<AbstractParameter>>> EvalPair = RandomModel->Evaluate(RemainderSamples, m_Threshold, mi_val, ma_val);
 				InlierFractionAccum[i] = EvalPair.first;
 				InliersAccum[i] = EvalPair.second;
 

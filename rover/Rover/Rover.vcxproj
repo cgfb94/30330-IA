@@ -127,6 +127,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ex5.cpp" />
     <ClCompile Include="ex4.cpp" />
+    <ClCompile Include="RANSAC.cpp" />
     <ClCompile Include="regions_islands.cpp" />
     <ClCompile Include="threshold_exe.cpp" />
     <ClCompile Include="terrain.cpp" />
@@ -135,6 +136,9 @@
     <ClCompile Include="webcam_capture.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AbstractModel.hpp" />
+    <ClInclude Include="CircleModel.hpp" />
+    <ClInclude Include="GRANSAC.hpp" />
     <ClInclude Include="mars.h" />
     <ClInclude Include="rover.h" />
   </ItemGroup>

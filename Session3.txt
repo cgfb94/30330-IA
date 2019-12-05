@@ -33,3 +33,9 @@ Filter
 Canny edge detection
 RANSAC
 Filter cirlce sizes
+
+Label the contour and estimate the 
+Ransac for lines
+
+Attach some labels to the contours
+Follow along the contour and test to see if contour deviates from the average of the last few points 

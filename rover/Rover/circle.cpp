@@ -38,8 +38,10 @@ int circle(const char* source)
 	cvtColor(src, src_gray, CV_BGR2GRAY);
 	
 	threshold(src_gray, src_gray, 40, 255, THRESH_TOZERO | THRESH_OTSU);
+	
+	//threshold()
 	for (int i(0); i < 50; ++i) medianBlur(src_gray, src_gray, 7);
-	for (int i(0); i < 5; ++i) blur(src_gray, src_gray, Size(3, 3));
+	//for (int i(0); i < 5; ++i) blur(src_gray, src_gray, Size(3, 3));
 	
 	//threshold(src_gray, src_gray, 40, 255, THRESH_TOZERO_INV | THRESH_OTSU);
 	Laplacian(src_gray, dst, ddepth, kernel_size, scale, delta, BORDER_DEFAULT);
@@ -48,12 +50,14 @@ int circle(const char* source)
 	convertScaleAbs(dst, abs_dst);
 	//threshold(abs_dst, abs_dst, 100, 255, THRESH_TOZERO | THRESH_OTSU);
 	
-
+	threshold(abs_dst, abs_dst, 40, 255, THRESH_BINARY | THRESH_OTSU);
 
 
 	
 	
 	//for (int i(0); i < 2; ++i) medianBlur(abs_dst, abs_dst, 5);
+
+	//distanceTransform
 	
 	HoughCircles(abs_dst, circles, CV_HOUGH_GRADIENT, 1, src_gray.rows / 8, 150, 15, 0, 0);
 	//HoughCircles();
@@ -75,6 +79,8 @@ int circle(const char* source)
 	imshow("Hough Circle Transform Demo", src);
 	imshow("Processed Image", abs_dst);
 
+	// distance transform
+
 	waitKey(0);
 	return 0;
 }
@@ -91,37 +97,11 @@ int circle(cv::Mat source, float dim = 1.0)
 	}
 
 	vector<Vec3f> circles;
-	int kernel_size = 5;
-	int scale = 1;
-	int delta = 0;
-	int ddepth = CV_16S;
-	/// Apply the Hough Transform to find the circles
-	Mat abs_dst, src2;
-
-	//cvtColor(src, src_gray, CV_BGR2GRAY);
-	/// Reduce the noise so we avoid false circle detection
-	for (int i(0); i < 1; ++i)
-	{
-		medianBlur(src, src2, 3);
-
-	}
-	/// Convert it to gray
-	//blur(src, src, Size(5,5));
-	
-	//threshold(abs_dst, abs_dst, 40, 255, THRESH_OTSU);
-	//Laplacian(src_gray, dst, ddepth, kernel_size, scale, delta, BORDER_DEFAULT);
-	//Canny(src_gray, abs_dst, 1, 10*10);
-
-	convertScaleAbs(dst, abs_dst);
-
-
-
-
 
 
 	//for (int i(0); i < 2; ++i) medianBlur(abs_dst, abs_dst, 5);
 
-	HoughCircles(abs_dst, circles, CV_HOUGH_GRADIENT, 1, abs_dst.rows / 8, 50, 80, 150, 250);
+	HoughCircles(src, circles, CV_HOUGH_GRADIENT, 1, src.rows / 8, 50, 20, 150, 250);
 	//HoughCircles();
 
 
@@ -139,7 +119,7 @@ int circle(cv::Mat source, float dim = 1.0)
 	/// Show your results
 	namedWindow("Hough Circle Transform Demo", CV_WINDOW_AUTOSIZE);
 	imshow("Hough Circle Transform Demo", src);
-	imshow("Processed Image", abs_dst);
+	//imshow("Processed Image", src);
 
 	waitKey(0);
 	return 0;

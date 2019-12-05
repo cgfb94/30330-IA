@@ -14,10 +14,14 @@
     <ClCompile Include="utils.cpp" />
     <ClCompile Include="webcam_capture.cpp" />
     <ClCompile Include="threshold_exe.cpp" />
+    <ClCompile Include="RANSAC.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mars.h" />
     <ClInclude Include="rover.h" />
+    <ClInclude Include="AbstractModel.hpp" />
+    <ClInclude Include="GRANSAC.hpp" />
+    <ClInclude Include="CircleModel.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Images\mars4.jpeg" />

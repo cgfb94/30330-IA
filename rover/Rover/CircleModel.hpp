@@ -20,12 +20,15 @@ public:
 class Circle2DModel
 	: public GRANSAC::AbstractModel<3>
 {
+public:
+	GRANSAC::VPFloat m_x;
+	GRANSAC::VPFloat m_y;
+	GRANSAC::VPFloat m_r;
 protected:
 
 	// Parametrization x^2 + y^2 = r^2
-	GRANSAC::VPFloat m_x; 
-	GRANSAC::VPFloat m_y; 
-	GRANSAC::VPFloat m_r;
+	
+
 
 	virtual GRANSAC::VPFloat ComputeDistanceMeasure(std::shared_ptr<GRANSAC::AbstractParameter> Param) override
 	{
@@ -78,18 +81,17 @@ public:
 
 		float m_a = (y_2 - y_1) / (x_2 - x_1);
 		float m_b = (y_3 - y_2) / (x_3 - x_2);
-
+		
 		m_x = (((m_a * m_b) * (y_1 - y_3)) + (m_b * (x_1 + x_2)) - (m_a * (x_2 + x_3))) /
 			(2 * (m_b - m_a));
 		m_y = (-(1 / m_a) * (m_x - (x_1 + x_2) / 2) + (y_1 + y_2) / 2);
 
-		m_r = sqrt((m_x * m_x) + (m_y * m_y));
+		m_r = sqrt(pow((m_x - x_1),2) + pow((m_y - y_1),2));
 
-
-		//m_DistDenominator = sqrt(m_a * m_a + m_b * m_b); // Cache square root for efficiency
+	//m_DistDenominator = sqrt(m_a * m_a + m_b * m_b); // Cache square root for efficiency
 	};
 
-	virtual std::pair<GRANSAC::VPFloat, std::vector<std::shared_ptr<GRANSAC::AbstractParameter>>> Evaluate(const std::vector<std::shared_ptr<GRANSAC::AbstractParameter>>& EvaluateParams, GRANSAC::VPFloat Threshold)
+	virtual std::pair<GRANSAC::VPFloat, std::vector<std::shared_ptr<GRANSAC::AbstractParameter>>> Evaluate(const std::vector<std::shared_ptr<GRANSAC::AbstractParameter>>& EvaluateParams, GRANSAC::VPFloat Threshold, GRANSAC::VPFloat min_radius, GRANSAC::VPFloat max_radius)
 	{
 		std::vector<std::shared_ptr<GRANSAC::AbstractParameter>> Inliers;
 		int nTotalParams = EvaluateParams.size();
@@ -103,9 +105,11 @@ public:
 				nInliers++;
 			}
 		}
-
+		float pi = 3.14159;
+		//GRANSAC::VPFloat ideal_circle_total = (pi * pow((m_r + Threshold), 2)) - (pi * pow((m_r - Threshold), 2));
 		GRANSAC::VPFloat InlierFraction = GRANSAC::VPFloat(nInliers) / GRANSAC::VPFloat(nTotalParams); // This is the inlier fraction
 
+		if (m_r > max_radius || m_r < min_radius) { return std::make_pair(-1, Inliers); }
 		return std::make_pair(InlierFraction, Inliers);
 	};
 };
