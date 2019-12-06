@@ -25,11 +25,13 @@ IplImage* webcam_capture(void);	// #TODO change webcam capture to return an IpIm
 int first_image(const char* source);
 cv::Mat watershed_regions(cv::Mat pic_RGB, int bin_threshold, int bin_type);
 cv::Mat dist_transf_slopes(cv::Mat pic_RGB, int bin_threshold, int bin_type);
+int threshold_exe(cv::Mat src);
 
 namespace utils
 {
 	std::string getAbsImagePath(const char* localPath);
 	cv::Mat loadImageG(std::string path, float scale = 0.4);
+	cv::Mat preproccess(cv::Mat src, float imscale = 1.0);
 }
 
 namespace ex4

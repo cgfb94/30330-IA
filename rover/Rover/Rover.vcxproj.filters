@@ -13,10 +13,21 @@
     <ClCompile Include="terrain2.cpp" />
     <ClCompile Include="utils.cpp" />
     <ClCompile Include="webcam_capture.cpp" />
+<<<<<<< HEAD
+=======
+    <ClCompile Include="threshold_exe.cpp" />
+    <ClCompile Include="RANSAC.cpp" />
+>>>>>>> Circles
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mars.h" />
     <ClInclude Include="rover.h" />
+<<<<<<< HEAD
+=======
+    <ClInclude Include="AbstractModel.hpp" />
+    <ClInclude Include="GRANSAC.hpp" />
+    <ClInclude Include="CircleModel.hpp" />
+>>>>>>> Circles
   </ItemGroup>
   <ItemGroup>
     <Image Include="Images\mars4.jpeg" />

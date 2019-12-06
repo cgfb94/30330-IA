@@ -1,0 +1,41 @@
+Group 1:
+Use different colour channels?
+
+Group 2:
+Correct light intensity 
+3 flashes from phones to simulate light ring
+Adjusting brightness and focus of the webcam
+Better setup gives less noise and better edge detection
+More detail makes shape detection more difficuly
+
+Blurred image reduces noise significantly 
+
+Me:
+Flash can make Canny more reliable
+Check the sparse data from the contours 
+Label contours in image and use those for circle detection
+Sparse data is much faster
+
+Group3:
+Bresenhams circle drawing algorithm!
+
+Harris corners for raking the corners found by FAST
+intensity centroid for orientation:
+find moments and centroid
+Fast9
+
+BRIEF: binary descriptor: hamming distance XOR 
+
+RANSAC algorithm
+Run trials to see if center is in range of probability
+
+Filter
+Canny edge detection
+RANSAC
+Filter cirlce sizes
+
+Label the contour and estimate the 
+Ransac for lines
+
+Attach some labels to the contours
+Follow along the contour and test to see if contour deviates from the average of the last few points 
