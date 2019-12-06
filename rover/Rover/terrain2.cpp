@@ -26,7 +26,7 @@ Mat translateImg(Mat& img, int offsetx, int offsety) {
 
 
 
-picture newpic_relpos(picture previous, Mat pic2, int n_kp = 7, int method = 1) {
+picture newpic_relpos(picture previous, Mat pic2, int n_kp = 60, int method = 1) {
 
 	method = 1;
 
@@ -161,14 +161,91 @@ picture newpic_relpos(picture previous, Mat pic2, int n_kp = 7, int method = 1) 
 
 	// CALCULATE ROTATION AND POSITION DIFFERENCE
 	location pos;
-	//pos.centre = abs_vec[0];
-	/*for (int i = 0; i < 4; i++) {
-		pos.corner[i] = abs_vec[i+1] - pos.centre;
-	}*/
+
+	// Create matrixes to store all computations
+	int nk = goodKP1.size();
+	if (nk > 100) cout << "\n FATAL ERROR --> MATRIX OVERFLOW. You have more keypoints than matrix slots.";
+
+	//float** err;
+	//err = new float* [n[0]];
+	//for (int i = 0; i < n[0]; i++) err[i] = new float[n[1]];
+
+	float **AZ, **Aangle; bool **like;
+	AZ = new float* [100]; Aangle = new float* [100]; like = new bool* [100]; bool like_v[100];
+	for (int i = 0; i < nk; i++) { 
+		AZ[i] = new float[100]; Aangle[i] = new float[100];
+		like[i] = new bool [100];
+		for (int j = i+1; j < nk; j++) like[i][j] = true;
+		like_v[i] = true;
+	}
+
+	// Loop to verify zoom and rotation given by different keypoint couples:------------
+	int nit = 3; float tol = 0.9; float ra1 = 2; float maxzoom = 100;
+	float avg_AZ = 0; float avg_Aangle = 0;
+	float sd_AZ = 0;  float sd_Aangle = 0;
+
+	for (int k = 0; k < nit; k++) {
+		float counter = 0;
+		avg_AZ = 0; avg_Aangle = 0;
+		sd_AZ = 0;  sd_Aangle = 0;
+		for (int i = 0; i < nk; i++) {
+			for (int j = i+1; j < nk; j++) {
+				if (like[i][j]) {
+					counter++;
+					AZ[i][j] = min(maxzoom, (euclideanDist(goodKP2[i], goodKP2[j]) / euclideanDist(goodKP1[i], goodKP1[j]))); //* previous.captured_from.z
+					AZ[j][i] = AZ[i][j];
+					avg_AZ = avg_AZ + AZ[i][j];
+					float a1 = atan2(goodKP1[j].y - goodKP1[i].y, goodKP1[j].x - goodKP1[i].x);
+					float a2 = atan2(goodKP2[j].y - goodKP2[i].y, goodKP2[j].x - goodKP2[i].x);
+					Aangle[i][j] = a1 - a2;
+					Aangle[j][i] = Aangle[i][j];
+					avg_Aangle = avg_Aangle + Aangle[i][j];
+					//cout << "\n > AZ(" << i << "," << j << ") = " << AZ[i][j] << ";  Angle(" << i << ", " << j << ") = " << Aangle[i][j];
+					//if (AZ[i][j] == maxzoom) cout << "<<<<<<<< FAIL:  p1 = (" << goodKP1[i].x << "," << goodKP1[i].y << "); p2 = (" << goodKP1[j].x << "," << goodKP1[j].y << ") || p1' = (" << goodKP2[i].x << "," << goodKP2[i].y << "); p2 = (" << goodKP2[j].x << "," << goodKP2[j].y << ")";
+				}
+			}
+		}
+		avg_AZ = avg_AZ / counter; avg_Aangle = avg_Aangle / counter;
+
+		// Compute standard deviation
+		for (int i = 0; i < nk; i++) {
+			for (int j = i+1; j < nk; j++) {
+				if (like[i][j]) {
+					sd_AZ = sd_AZ + (AZ[i][j] - avg_AZ) * (AZ[i][j] - avg_AZ);
+					sd_Aangle = sd_Aangle + (Aangle[i][j] - avg_Aangle) * (Aangle[i][j] - avg_Aangle);
+				}
+			}
+		}
+		sd_AZ = sqrt(sd_AZ / (counter - 1));
+		sd_Aangle = sqrt(sd_Aangle / (counter - 1));
+
+		// Evaluate measurements
+		for (int i = 0; i < nk; i++) {
+			counter = 0;
+			for (int j = 0; j < nk; j++) {
+				if (like[i][j]) {
+					if ((abs(AZ[i][j]) > (avg_AZ + ra1*sd_AZ)) || ((abs(Aangle[i][j]) > (avg_Aangle + ra1*sd_Aangle)))) { like[i][j] = false; }
+				}
+				if (!like[i][j]) {
+					counter++;
+				}
+			}
+			if (counter/nk > tol) like_v[i] = false;
+		}
+	}
+	cout << "\n Average dZ = " << avg_AZ << " --> err: = " << sd_AZ << "\n Average dangle = " << avg_Aangle << " --> err: = " << sd_Aangle;
+	// endloop----------------------------------------------------------------
+
+	/*pos.dz = avg_AZ;
+	pos.d_angle = avg_Aangle;
+	pos.error = max(sd_Aangle, sd_AZ);*/
+
+	// old %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	pos.dz = (euclideanDist(goodKP2[0], goodKP2[1]) / euclideanDist(goodKP1[0], goodKP1[1])); //* previous.captured_from.z
 	float a1 = atan2(goodKP1[1].y - goodKP1[0].y, goodKP1[1].x - goodKP1[0].x);
 	float a2 = atan2(goodKP2[1].y - goodKP2[0].y, goodKP2[1].x - goodKP2[0].x);
 	pos.d_angle = a1 - a2;
+	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 	// Zoom and rotate second image to match second one's characteristics
@@ -181,31 +258,79 @@ picture newpic_relpos(picture previous, Mat pic2, int n_kp = 7, int method = 1) 
 		aux2[k].y = rot.at<double>(1, 0) * goodKP1[k].x + rot.at<double>(1, 1) * goodKP1[k].y + rot.at<double>(1, 2);
 		circle(aux, aux2[k], 10, Scalar(255), 2);
 	}
-	// ... then, compare both and get relative displacement between keypoints:
 
-	// Loop to verify results given by different keypoint couples:------------
-	pos.traslation.x = 0; pos.traslation.y = 0; float N = goodKP2.size();
-	for (int k = 0; k < N; k++) {
-		pos.traslation.x = pos.traslation.x + (goodKP2[k].x - aux2[k].x);
-		pos.traslation.y = pos.traslation.y + (goodKP2[k].y - aux2[k].y);
+
+	// Loop to verify translation given by different keypoint couples:------------
+	float avg_AX = 0; float avg_AY = 0;
+	float sd_AX = 0;  float sd_AY = 0;
+	float AX[100]; float AY[100];
+	float maxtrans = 800; float ra2 = 1.2;
+
+	for (int k = 0; k < nit; k++) {
+		float counter = 0;
+		avg_AX = 0; avg_AY = 0;
+		sd_AX = 0;  sd_AY = 0;
+		for (int i = 0; i < nk; i++) {
+			if (like_v[i]) {
+				counter++;
+				AX[i] = min(maxtrans, goodKP2[i].x - aux2[i].x);
+				avg_AX = avg_AX + AX[i];
+				AY[i] = min(maxtrans, goodKP2[i].y - aux2[i].y);
+				avg_AY = avg_AY + AY[i];
+				//cout << "\n > AX(" << i << ") = " << AX[i] << ";  AY(" << i << ") = " << AY[i];
+				//if (AX[i] == maxtrans) cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< FAIL";
+
+			}
+			
+		}
+		avg_AX = avg_AX / counter; avg_AY = avg_AY / counter;
+
+		// Compute standard deviation
+		for (int i = 0; i < nk; i++) {
+			if (like_v[i]) {
+				sd_AX = sd_AX + (AX[i] - avg_AX) * (AX[i] - avg_AX);
+				sd_AY = sd_AY + (AY[i] - avg_AY) * (AY[i] - avg_AY);
+			}
+		}
+		sd_AX = sqrt(sd_AX / (counter - 1));
+		sd_AY = sqrt(sd_AY / (counter - 1));
+
+		// Evaluate measurements
+		for (int i = 0; i < nk; i++) {
+			if (like_v[i]) {
+				if ((abs(AX[i]) > (avg_AX + ra2*sd_AX)) || ((abs(AY[i]) > (avg_AY + ra2*sd_AY)))) { like_v[i] = false; }
+			}
+		}
 	}
-	pos.traslation.x = pos.traslation.x / N;
-	pos.traslation.y = pos.traslation.y / N;
-	pos.step_distance = euclideanDist(Point2f(0, 0), pos.traslation);
+
+	cout << "\n Average dX = " << avg_AX << "--> err: = " << sd_AX << "\n Average dY = " << avg_AY << "--> err: = " << sd_AY;
+
 	// endloop----------------------------------------------------------------
+
+	//pos.traslation.x = avg_AX;
+	//pos.traslation.y = avg_AY;
+	//pos.error = max(pos.error, sd_AX); pos.error = max(pos.error, sd_AY);
+
+	//old %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+	pos.traslation.x = (goodKP2[0].x - aux2[0].x);
+	pos.traslation.y = (goodKP2[0].y - aux2[0].y);
+	pos.step_distance = euclideanDist(Point2f(0, 0), pos.traslation);
+	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 	// Get the correct relative measurements watching the loop results
 
 	// Using relative measurements compute absolute location
+
+
 	pos.z = (1/pos.dz) * previous.captured_from.z;
 	pos.angle = pos.d_angle + previous.captured_from.angle;
 	pos.abs_centre = pos.traslation + previous.captured_from.abs_centre;
 	pos.rel_homography = H;
-	pos.error = previous.captured_from.error;
+	pos.error = pos.error+previous.captured_from.error;
 
 	// Return:
 	newpic.captured_from = pos;
-		return newpic;
+	return newpic;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -438,8 +563,8 @@ int test3(vector<Mat> pic) {
 	for (int i = 1; i < n; i++) {
 		cout << "\n\n>> FRAME " << i;
 		frame.push_back(newpic_relpos(frame[i - 1], pic[i]));
-		cout << "\nFrame (" << i << ") moved " << frame[i].captured_from.step_distance << "units -->  dX = " << frame[i].captured_from.traslation.x << ", dY = " << frame[i].captured_from.traslation.y << ", dZ = " << frame[i].captured_from.dz << "; dAngle =  " << frame[i].captured_from.angle;
-		cout << "\n                                   X = " << frame[i].captured_from.abs_centre.x << ",  Y = " << frame[i].captured_from.abs_centre.y << ",  Z = " << frame[i].captured_from.z;
+		cout << "\nFrame (" << i << ") moved " << frame[i].captured_from.step_distance << "units -->  dX = " << frame[i].captured_from.traslation.x << ", dY = " << frame[i].captured_from.traslation.y << ", dZ = " << frame[i].captured_from.dz << "; dAngle =  " << frame[i].captured_from.d_angle;
+		cout << "\n                                   X = " << frame[i].captured_from.abs_centre.x << ",  Y = " << frame[i].captured_from.abs_centre.y << ",  Z = " << frame[i].captured_from.z << "; Angle =  " << frame[i].captured_from.angle << ",  >> ERROR << = " << frame[i].captured_from.error;
 
 	}
 
