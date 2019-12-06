@@ -14,23 +14,6 @@
 #include "GRANSAC.hpp"
 #include "CircleModel.hpp"
 
-// GRANSAC::VPFloat Slope(int x0, int y0, int x1, int y1)
-// {
-// 	return (GRANSAC::VPFloat)(y1 - y0) / (x1 - x0);
-// }
-// 
-// void DrawFullLine(cv::Mat& img, cv::Point a, cv::Point b, cv::Scalar color, int LineWidth)
-// {
-// 	GRANSAC::VPFloat slope = Slope(a.x, a.y, b.x, b.y);
-// 
-// 	cv::Point p(0, 0), q(img.cols, img.rows);
-// 
-// 	p.y = -(a.x - p.x) * slope + a.y;
-// 	q.y = -(b.x - q.x) * slope + b.y;
-// 
-// 	cv::line(img, p, q, color, LineWidth, cv::LINE_AA, 0);
-//}
-
 vector<int> my_RANSAC(cv::Mat img, float r1, float r2)
 {
 	
