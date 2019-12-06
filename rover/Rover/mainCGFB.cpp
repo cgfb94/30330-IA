@@ -10,6 +10,10 @@
 #include <random>
 #include <tuple>
 
+
+//calculates absolute circle position
+
+
 vector <int> 
 my_RANSAC(cv::Mat img, float r1, float r2);
 
@@ -93,18 +97,6 @@ int main(int argc, char* argv[])
 // use the new list of contours to detect circles
 {
 	//IplImage* Image = webcam_capture();
-<<<<<<< HEAD
-	std::string imPath0 = utils::getAbsImagePath("Images\\mars8.jpeg");
-	std::string imPath1 =  utils::getAbsImagePath("Images\\mars7.jpeg"); //7,6
-	std::string imPath2 =  utils::getAbsImagePath("Images\\mars6.jpeg");
-	std::string imPath3 = utils::getAbsImagePath("Images\\mars5.jpeg");
-	std::string imPath4 = utils::getAbsImagePath("Images\\mars3.jpeg");
-	// Produce some contour images
-	//if (ex4::contour(imPath.c_str())) return 1;
-	std::string impath = utils::getAbsImagePath("Images\\mars5.jpeg");
-	//Look for circles
-	//cv::Mat fourierIm = fourier(impath.c_str());
-=======
 	std::string imPath =  utils::getAbsImagePath("Images\\mars1.jpeg");
 
 	//cv::Mat image = (utils::loadImageG(impath));
@@ -116,7 +108,6 @@ int main(int argc, char* argv[])
 	copyMakeBorder(processed, dst, bordersize, bordersize, bordersize, bordersize, BORDER_CONSTANT);
 	// collect the top 10 and plot in different colours
 	// restrict score by most complete circle
->>>>>>> Circles
 
 	float r1, r2;
 	r1 = 50;
@@ -126,12 +117,8 @@ int main(int argc, char* argv[])
 	cv::waitKey(0);
 
 
-<<<<<<< HEAD
-	//fourier(image, test);
-=======
 	// write a function  that accepts the max/min radii 
 	// compare with the output of the hough circle algorithm
->>>>>>> Circles
 
 // 	Mat canny_output;
 // 	vector<vector<Point> > contours;
@@ -154,18 +141,11 @@ int main(int argc, char* argv[])
 	//Terrain navigation
 	//int position;
 	//position = first_image(imPath.c_str());
-<<<<<<< HEAD
-
-	vector<Mat> pics = { imread(imPath0.c_str(), 1), imread(imPath1.c_str(), 1), imread(imPath2.c_str(), 1), imread(imPath3.c_str(), 1), imread(imPath4.c_str(), 1) };
-
-	int x = test3(pics);
-=======
 	
 	//Mat pic1 = imread(imPath1.c_str(), 1);
 	//Mat pic2 = imread(imPath2.c_str(), 1);
 
 	//int x = test2(pic1, pic2);
->>>>>>> Circles
 
 	//int x = test(pic1, pic2);
 }

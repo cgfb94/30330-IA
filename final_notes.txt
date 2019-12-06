@@ -1,0 +1,41 @@
+Group 1:
+Display offset of detected circle to center of image
+Variable dilated and eroded until circle is detected
+Not always needed to erode and dilate so make it variable
+
+Q: why are you dilating eroding vs opposite way, 
+justify the processing?
+
+Q: Circle Method? A :  Using Hough circle detection
+
+Q: Why 35? A: Manually tuned
+
+Group 2:
+Processing a lot of removeable data,
+morpholigical transformation
+ make mask and remove edges which are not useful
+rejecting false positives
+Q: try fitting ransac for straight lines?
+Q: only looking for one circle?
+
+Group 3:
+Template matching openCV, gets difference of parts of image.
+Doesntt find angle of change
+
+Q: what if part missing? A: not robust. use a grid of templates
+
+Q: How does it work? 
+
+Group 4:
+
+Group 5:
+Bilateral-erosion-cannyedge-circle hough
+
+What cirlce hough?
+
+
+Group 6:
+PIXL 12mm focul length (xi/f)=x/z
+
+Edge detection method?
+Put a center of the image cross hair
