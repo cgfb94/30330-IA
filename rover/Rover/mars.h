@@ -311,7 +311,6 @@ public:
 	//int spots[2][100];
 	Point2f circle_rel; float circle_dZ;
 	Point2f circle_abs; float circle_Z;
-	float circle_error = 0;
 
 	picture() {};
 
@@ -357,16 +356,8 @@ public:
 //	return R_range;
 //}
 
-float expCircRad(float Z, float focalLength, float realR)
-{
-	float R = (realR / Z) * focalLength;
-	return R;
-}
-
 int test(Mat object, Mat image);
 int test2(Mat object, Mat image);
 int test3(vector<Mat> pics);
-picture newpic_relpos(picture previous, Mat pic2, int n_kp = 15, int method = 1);
-int display_map(vector<picture> piece);
 
 

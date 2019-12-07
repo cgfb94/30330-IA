@@ -377,7 +377,6 @@ int display_map(vector<picture> piece) {
 	//Mat map_see = cv::Mat::zeros(map.size(), CV_8U);
 	
 	Point2f centre_aux = centre;
-	Point2f circ_centre = centre_aux + piece[0].circle_abs;
 
 	// DRAW IMAGES
 	for (int j = 0; j < n; j++) {
@@ -388,7 +387,6 @@ int display_map(vector<picture> piece) {
 
 		centre_aux = centre - piece[j].captured_from.abs_centre;
 		piece[j].captured_from.map_centre = centre_aux;
-		circ_centre = centre_aux + piece[j].circle_abs;
 
 		float scale = piece[j].captured_from.z / piece[0].captured_from.z;
 
@@ -424,10 +422,9 @@ int display_map(vector<picture> piece) {
 		//line(map, abs_points[j][1], abs_points[j][1], 255, 1); line(map, abs_points[j][2], abs_points[j][3], 255, 1);
 		//line(map, abs_points[j][3], abs_points[j][4], 255, 1); line(map, abs_points[j][4], abs_points[j][1], 255, 1);
 		circle(map, centre_aux, 5, Scalar(255), 2);
-		circle(map, circ_centre, 10, Scalar(255), 4);
 	}
 
-	// DRAW VECTORS AND CIRCLES
+	// DRAW VECTORS
 	for (int j = 1; j < n; j++) {
 		arrowedLine(map, piece[j - 1].captured_from.map_centre, piece[j].captured_from.map_centre, Scalar(255), 2);
 		putText(map, "-(" + to_string(j) + ")", piece[j].captured_from.map_centre, FONT_HERSHEY_COMPLEX_SMALL, 1.5, 255, 2);

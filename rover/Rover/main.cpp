@@ -117,67 +117,126 @@ circle_finder(cv::Mat ProcessedImage, float min_rad, float max_rad, int bordersi
 }
 
 
-int main(int argc, char* argv[]){
+int main(int argc, char* argv[])
 // iternate through the list of contours given by canny, find average gradient
 // of the last few points. split the contour if the gradient deviates from average
 // by too much and then continue search on other half of the contour
 // use the new list of contours to detect circles
+{
+	//IplImage* Image = webcam_capture();
+<<<<<<< HEAD
 
-vector<string> imPath = {
-	utils::getAbsImagePath("Images\\mars8.jpeg"),
-	utils::getAbsImagePath("Images\\mars6.jpeg"),
-	utils::getAbsImagePath("Images\\mars7.jpeg"),
-	utils::getAbsImagePath("Images\\mars3.jpeg"),
-	utils::getAbsImagePath("Images\\mars5.jpeg")
-};
-int dataSize = imPath.size();
+// 	std::string imPath0 = utils::getAbsImagePath("Images\\mars8.jpeg");
+// 	std::string imPath1 =  utils::getAbsImagePath("Images\\mars7.jpeg"); //7,6
+// 	std::string imPath2 =  utils::getAbsImagePath("Images\\mars6.jpeg");
+// 	std::string imPath3 = utils::getAbsImagePath("Images\\mars5.jpeg");
+// 	std::string imPath4 = utils::getAbsImagePath("Images\\mars3.jpeg");
+// 	// Produce some contour images
+// 	//if (ex4::contour(imPath.c_str())) return 1;
+// 	std::string impath = utils::getAbsImagePath("Images\\mars5.jpeg");
+// 	//Look for circles
+// 	//cv::Mat fourierIm = fourier(impath.c_str());
+// 	
+// 	std::string imPath =  utils::getAbsImagePath("Images\\mars4.jpeg");
+	//imshow("CAM", webcam_capture());
+	cv::Mat imcap = webcam_capture_main(true, "s678-x0.y0-0.186m-L1-R1.jpg");
 
-vector<picture> frame(1);
+// 	//cv::waitKey(0);
+// 	//cv::Mat image = (utils::loadImageG(impath));
+// 	cv::Mat dst;
+// // 	cv::Mat image = cv::imread(imPath.c_str(), 1);
+// // 	cv::resize(image, image, cv::Size(), 0.3, 0.3);
+	cv::Mat processed = preprocess_main(imcap, 1);
+ 	int bordersize = 0;
+// 	copyMakeBorder(processed, dst, bordersize, bordersize, bordersize, bordersize, BORDER_CONSTANT);
+// 	// collect the top 10 and plot in different colours
+// 	// restrict score by most complete circle
+// 
+ 	float r1, r2;
+	// 640 480
+ 	r1 = 50;
+ 	r2 = 120;
+// 	
+ 	circle_finder(processed, r1, r2, bordersize, imcap);
+ 	cv::waitKey(0);
+=======
+	std::string imPath0 = utils::getAbsImagePath("Images\\mars8.jpeg");
+	std::string imPath1 =  utils::getAbsImagePath("Images\\mars6.jpeg"); //7,6
+	std::string imPath2 =  utils::getAbsImagePath("Images\\mars7.jpeg");
+	std::string imPath3 = utils::getAbsImagePath("Images\\mars3.jpeg");
+	std::string imPath4 = utils::getAbsImagePath("Images\\mars5.jpeg");
+	// Produce some contour images
+	//if (ex4::contour(imPath.c_str())) return 1;
+	std::string impath = utils::getAbsImagePath("Images\\mars5.jpeg");
+	//Look for circles
+	//cv::Mat fourierIm = fourier(impath.c_str());
+	std::string imPath =  utils::getAbsImagePath("Images\\mars5.jpeg");
 
-// 1 - INITIALIZE ORIGIN
-frame[0].original = imread(imPath[0].c_str(), 1);
-frame[0].captured_from.error = 0;
-frame[0].captured_from.z = 20; //mm
+	//cv::Mat image = (utils::loadImageG(impath));
+	cv::Mat dst;
+	cv::Mat image = cv::imread(imPath.c_str(), 1);
+	cv::resize(image, image, cv::Size(), 0.3, 0.3);
+	cv::Mat processed = preprocess_main(image, 1);
+	int bordersize = 10;
+	copyMakeBorder(processed, dst, bordersize, bordersize, bordersize, bordersize, BORDER_CONSTANT);
+	// collect the top 10 and plot in different colours
+	// restrict score by most complete circle
 
-float focalLength = 1265; //pixels
-float realR = 50/2; //mm
-float R_error = 0.3; //%
+	float r1, r2;
+	r1 = 70;
+	r2 = 120;
+	
+	//circle_finder(dst, r1, r2, bordersize, image);
+	//cv::waitKey(0);
+>>>>>>> 72166f741c9d77f15944a0b8d9c19877ba328cee
 
-// 2 - Find circle in first image
-cv::Mat processed = preprocess_main(frame[0].original, 1);
-float R = expCircRad(frame[0].captured_from.z, focalLength, realR); //pixels
-tuple<float, float, float> circ_centre = circle_finder(processed, R*(1-R_error), R * (1 + R_error), 0);
-frame[0].circle_abs = Point2f(get<0>(circ_centre), get<1>(circ_centre)); frame[0].circle_rel = frame[0].circle_abs;
-frame[0].circle_dZ = get<2>(circ_centre); 
-frame[0].circle_Z = (1 / frame[0].circle_dZ)* frame[0].captured_from.z;
 
-	for (int i = 1; i < dataSize; i++) {
+	//fourier(image, test);
+	// write a function  that accepts the max/min radii 
+	// compare with the output of the hough circle algorithm
 
-		Mat pic = imread(imPath[i].c_str(), 1);
+// 	Mat canny_output;
+// 	vector<vector<Point> > contours;
+// 	vector<Vec4i> hierarchy;
+// 
+// 	/// Detect edges using canny
+// 	Canny(processed, canny_output, 150, 150 * 2, 3);
+// 	/// Find contours
+// 	findContours(canny_output, contours, hierarchy, CV_RETR_LIST, CV_CHAIN_APPROX_NONE, Point(0, 0));
+// 
+// 	/// Draw contours
+// 	Mat drawing = Mat::zeros(canny_output.size(), CV_8UC3);
+// 	for (int i = 0; i < contours.size(); i++)
+// 	{
+// 		Scalar color = Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
+// 		drawContours(drawing, contours, i, color, 2, 8, hierarchy, 0, Point());
+// 	}
 
-		// 3 - Run terrain recognition to see how we moved
-				cout << "\n\n>> FRAME " << i;
-		frame.push_back(newpic_relpos(frame[i - 1], pic));
-		cout << "\nFrame (" << i << ") moved " << frame[i].captured_from.step_distance << "units -->  dX = " << frame[i].captured_from.traslation.x << ", dY = " << frame[i].captured_from.traslation.y << ", dZ = " << frame[i].captured_from.dz << "; dAngle =  " << frame[i].captured_from.d_angle;
-		cout << "\n                                   X = " << frame[i].captured_from.abs_centre.x << ",  Y = " << frame[i].captured_from.abs_centre.y << ",  Z = " << frame[i].captured_from.z << "; Angle =  " << frame[i].captured_from.angle << ",  >> ERROR << = " << frame[i].captured_from.error;
 
-		// 4 - Find circle
-		cv::Mat processed = preprocess_main(frame[0].original, 1);
-		float R = expCircRad(frame[0].captured_from.z, focalLength, realR); //pixels
-		tuple<float, float, float> circ_centre = circle_finder(processed, R * (1 - R_error), R * (1 + R_error), 0);
-		frame[i].circle_rel = Point2f(get<0>(circ_centre), get<1>(circ_centre));
-		frame[i].circle_abs = frame[i].circle_rel + frame[i].captured_from.abs_centre;
-		frame[i].circle_dZ = get<2>(circ_centre);
-		frame[i].circle_Z = (1 / frame[i].circle_dZ) * frame[i].captured_from.z;
+<<<<<<< HEAD
+// 	//Terrain navigation
+// 	//int position;
+// 	//position = first_image(imPath.c_str());
+// 
+// 	vector<Mat> pics = { imread(imPath0.c_str(), 1), imread(imPath1.c_str(), 1), imread(imPath2.c_str(), 1), imread(imPath3.c_str(), 1), imread(imPath4.c_str(), 1) };
+// 
+// 	int x = test3(pics);
+=======
+	//Terrain navigation
+	//int position;
+	//position = first_image(imPath.c_str());
 
-		// 5 - DISPLAY COLLAGE
-		cout << "\n\n DRAWING AREA MAP:";
-		display_map(frame);
+	vector<Mat> pics = { imread(imPath0.c_str(), 1), imread(imPath1.c_str(), 1), imread(imPath2.c_str(), 1), imread(imPath3.c_str(), 1), imread(imPath4.c_str(), 1) };
 
-		waitKey();
+	int x = test3(pics);
+>>>>>>> 72166f741c9d77f15944a0b8d9c19877ba328cee
+	
+	//Mat pic1 = imread(imPath1.c_str(), 1);
+	//Mat pic2 = imread(imPath2.c_str(), 1);
 
-	}
-	return 0;
+	//int x = test2(pic1, pic2);
+
+	//int x = test(pic1, pic2);
 }
 
 
