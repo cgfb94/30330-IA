@@ -20,7 +20,7 @@ cv::Mat fourier(const char* source);
 cv::Mat fourier(cv::Mat inputImage, cv::Mat(*function)(cv::Mat));
 
 int hist(IplImage source);
-IplImage* webcam_capture(void);	// #TODO change webcam capture to return an IpImage
+//IplImage* webcam_capture(void);	// #TODO change webcam capture to return an IpImage
 
 int first_image(const char* source);
 cv::Mat watershed_regions(cv::Mat pic_RGB, int bin_threshold, int bin_type);

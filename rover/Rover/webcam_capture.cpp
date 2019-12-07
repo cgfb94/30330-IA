@@ -3,7 +3,7 @@
 
 
 
-IplImage* webcam_capture(void)
+IplImage* webcam_capture_old(void)
 {
 	const char* wName = "Captured image";
 	// window namecvNamedWindow(wName, 0); // create simple window
