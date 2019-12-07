@@ -16,7 +16,7 @@ struct location {
 	float d_angle = 0;
 	float angle=0;
 	float step_distance = 0;
-	float error = 100000;
+	float error = 0;
 	Mat rel_homography;
 };
 
@@ -34,6 +34,210 @@ struct region
 	int pos_x; int pos_y;
 };
 
+template<typename T>
+vector<T> subvector(vector<T> const& v, int m, int n) {
+	auto first = v.begin() + m;
+	auto last = v.begin() + n + 1;
+	vector<T> vector(first, last);
+	return vector;
+}
+
+class KPstat 
+{
+public:
+	float avg = -10000, sd;
+	string name;
+	vector<int> N;
+	vector<float> values;
+	vector<float> weight;
+	vector<float> avg_dist;
+	vector<float> ranked; // ordered by distance to average
+	vector<float> w_ranked;
+
+	////ADD FUNCTIONS
+	KPstat();
+	KPstat(string text) {
+		name = text;
+	}
+	void initial_normal_distribution(bool show = false) {
+		avg = 0; sd = 0; float Z = 0;
+		int n = values.size();
+
+		for (int i = 0; i < n; i++) {
+			if (values[i] > -1000 && values[i] < 1000) {
+				avg = avg + min((float)10000, (values[i] * weight[i]));
+				Z = Z + weight[i];
+			}
+		}
+		avg = avg / Z;
+
+		for (int i = 0; i < n; i++) {
+			if (values[i] > -1000 && values[i] < 1000) sd = sd + (values[i] - avg) * (values[i] - avg);
+		}
+		sd = sqrt(sd / (Z - 1));
+
+		if (show) cout << "\n Normal distribution --> " << name << " ~ N ( " << avg << ", " << sd << " ),  from " << n << " values.";
+	}
+	void weighted_average() {
+		avg = 0; float Z = 0;
+		int n = values.size();
+
+		for (int i = 0; i < n; i++) {
+			avg = avg + (values[i] * weight[i]);
+			Z = Z + weight[i];
+		}
+		avg = avg / Z;
+	}
+	void initial_orderbydistancetoX() {
+		int n = values.size();
+		ranked = { values[0] }, avg_dist = { abs({ values[0] - avg }) }; N = { 0 };
+		w_ranked = { weight[0] };
+
+		int vmax = 1;
+		for (int i = 1; i < n; i++) {
+			float dist = min((float)1000, abs(values[i] - avg));
+			if (dist >= avg_dist.back()) {
+				ranked.push_back(values[i]);
+				avg_dist.push_back(dist);
+				N.push_back(i);
+				w_ranked.push_back(weight[i]);
+				vmax++;
+			}
+			else if (dist <= avg_dist[0]) {
+				ranked.insert(ranked.begin(), values[i]);
+				avg_dist.insert(avg_dist.begin(), dist);
+				N.insert(N.begin(), i);
+				w_ranked.insert(w_ranked.begin(), weight[i]);
+				vmax++;
+			}
+			else
+				for (int j = 1; j <= vmax; j++) {
+					if (dist < avg_dist[j]) {
+						ranked.insert(ranked.begin() + j, values[i]);
+						avg_dist.insert(avg_dist.begin() + j, dist);
+						N.insert(N.begin() + j, i);
+						w_ranked.insert(w_ranked.begin() + j, weight[i]);
+						vmax++;
+						break;
+					}
+				}
+		}
+	}
+	void orderbydistancetoX() {
+		int n = ranked.size();
+		vector<float> ranked2; vector<float> w_ranked2; vector<int> N2;
+		ranked2 = { ranked[0] }, avg_dist = { abs({ ranked[0] - avg }) }; N2 = { N[0] };
+		w_ranked2 = { w_ranked[0] };
+
+		int vmax = 1;
+		for (int i = 1; i < n; i++) {
+			float dist = min((float)1000, abs(ranked[i] - avg));
+			if (dist >= avg_dist.back()) {
+				ranked2.push_back(ranked[i]);
+				avg_dist.push_back(dist);
+				N2.push_back(N[i]);
+				w_ranked2.push_back(w_ranked[i]);
+				vmax++;
+			}
+			else if (dist <= avg_dist[0]) {
+				ranked2.insert(ranked2.begin(), ranked[i]);
+				avg_dist.insert(avg_dist.begin(), dist);
+				N2.insert(N2.begin(), N[i]);
+				w_ranked2.insert(w_ranked2.begin(), w_ranked[i]);
+				vmax++;
+			}
+			else
+				for (int j = 1; j <= vmax; j++) {
+					if (dist < avg_dist[j]) {
+						ranked2.insert(ranked2.begin() + j, ranked[i]);
+						avg_dist.insert(avg_dist.begin() + j, dist);
+						N2.insert(N2.begin() + j, N[i]);
+						w_ranked2.insert(w_ranked2.begin() + j, w_ranked[i]);
+						vmax++;
+						break;
+					}
+				}
+		}
+	}
+	void destroy_outliers(float rate = 0.1) {
+		if (avg == -10000) weighted_average();
+		if (ranked.empty()) {
+			initial_orderbydistancetoX();
+			return;
+		}
+		else orderbydistancetoX();
+		int n = ranked.size();
+		int good = (float)n * (1.0 - rate);
+		ranked = subvector(ranked, 0, good);
+		w_ranked = subvector(w_ranked, 0, good);
+		N = subvector(N, 0, good);
+	}
+	int normal_distribution(bool show = false) {
+		avg = 0; sd = 0; float Z = 0;
+		int n = ranked.size();
+		if (n == 0) {
+			cout << "\n WARNING: Data still in raw state. Performing instead <<initial normal distribution>>.";
+			initial_normal_distribution(show);
+			return 0;
+		}
+
+		for (int i = 0; i < n; i++) {
+			if (ranked[i] > -1000 && ranked[i] < 1000) {
+				avg = avg + min((float)10000, (ranked[i] * w_ranked[i]));
+				Z = Z + w_ranked[i];
+			}
+		}
+		avg = avg / Z;
+
+		for (int i = 0; i < n; i++) {
+			if (ranked[i] > -1000 && ranked[i] < 1000) sd = sd + (ranked[i] - avg) * (ranked[i] - avg);
+		}
+		sd = sqrt(sd / (Z - 1));
+
+		if (show) cout << "\n Normal distribution --> " << name << " ~ N ( " << avg << ", " << sd << " ),  from " << n << " values.";
+		return 0;
+	}
+	vector<int> findCommonInfo(KPstat S) {
+		vector <int> common;
+		for (int i = 0; i < N.size(); i++) {
+			for (int j = 0; j < S.N.size(); j++) {
+				if (N[i] == S.N[j]) {
+					common.push_back(N[i]);
+					break;
+				}
+			}
+		}
+		return common;
+
+
+	};
+	KPstat useCommonInfo(KPstat S) {
+		vector <int> commonN;
+		vector <float> Sranked;
+		ranked.clear();
+		for (int i = 0; i < N.size(); i++) {
+			for (int j = 0; j < S.N.size(); j++) {
+				if (N[i] == S.N[j]) {
+					commonN.push_back(N[i]);
+					ranked.push_back(values[N[i]]);
+					Sranked.push_back(S.values[N[i]]);
+					w_ranked.push_back(weight[N[i]]);
+					break;
+				}
+			}
+		}
+		N = commonN;
+		S.ranked = Sranked;
+		S.N = commonN;
+		S.w_ranked = w_ranked;
+		return S;
+	}
+	void copyProcessedInfo(KPstat S) {
+		N = S.N;
+		ranked = S.ranked;
+		w_ranked = S.w_ranked;
+	}
+};
 
 class square_matchings
 {
@@ -105,8 +309,20 @@ public:
 	vector<Point> locations;
 	location captured_from;
 	//int spots[2][100];
+	Point2f circle_rel; float circle_dZ;
+	Point2f circle_abs; float circle_Z;
 
 	picture() {};
+
+	void get_rel_circle(float dx, float dy, float dz) {
+		circle_rel.x = dx;
+		circle_rel.y = dy;
+		circle_dZ = dz;
+	}
+	void rel2abs_circle() {
+		circle_abs = captured_from.abs_centre + circle_rel;
+		circle_Z = circle_dZ * captured_from.z;
+	}
 
 	Mat get_piece(Point spot, int n_pixels) {
 		Mat piece;
@@ -114,7 +330,6 @@ public:
 		piece = original(Rect(spot.x - l, spot.y - l, n_pixels, n_pixels));
 		return piece;
 	}
-	
 	vector<Mat> get_landmark_pics(int size, bool show=false)
 	{
 		int n = locations.size();
@@ -132,6 +347,14 @@ public:
 		return feat;
 	}
 };
+
+//pair<int, int> cirRangeCalc(float Z, float focalLength, float realR, float error = 0.1) {
+//	float R = (realR / Z) * focalLength;
+//	pair<int, int> R_range;
+//	R_range.first = R - error;
+//	R_range.second = R + error;
+//	return R_range;
+//}
 
 int test(Mat object, Mat image);
 int test2(Mat object, Mat image);

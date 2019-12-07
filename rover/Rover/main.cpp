@@ -124,6 +124,7 @@ int main(int argc, char* argv[])
 // use the new list of contours to detect circles
 {
 	//IplImage* Image = webcam_capture();
+<<<<<<< HEAD
 
 // 	std::string imPath0 = utils::getAbsImagePath("Images\\mars8.jpeg");
 // 	std::string imPath1 =  utils::getAbsImagePath("Images\\mars7.jpeg"); //7,6
@@ -158,6 +159,36 @@ int main(int argc, char* argv[])
 // 	
  	circle_finder(processed, r1, r2, bordersize, imcap);
  	cv::waitKey(0);
+=======
+	std::string imPath0 = utils::getAbsImagePath("Images\\mars8.jpeg");
+	std::string imPath1 =  utils::getAbsImagePath("Images\\mars6.jpeg"); //7,6
+	std::string imPath2 =  utils::getAbsImagePath("Images\\mars7.jpeg");
+	std::string imPath3 = utils::getAbsImagePath("Images\\mars3.jpeg");
+	std::string imPath4 = utils::getAbsImagePath("Images\\mars5.jpeg");
+	// Produce some contour images
+	//if (ex4::contour(imPath.c_str())) return 1;
+	std::string impath = utils::getAbsImagePath("Images\\mars5.jpeg");
+	//Look for circles
+	//cv::Mat fourierIm = fourier(impath.c_str());
+	std::string imPath =  utils::getAbsImagePath("Images\\mars5.jpeg");
+
+	//cv::Mat image = (utils::loadImageG(impath));
+	cv::Mat dst;
+	cv::Mat image = cv::imread(imPath.c_str(), 1);
+	cv::resize(image, image, cv::Size(), 0.3, 0.3);
+	cv::Mat processed = preprocess_main(image, 1);
+	int bordersize = 10;
+	copyMakeBorder(processed, dst, bordersize, bordersize, bordersize, bordersize, BORDER_CONSTANT);
+	// collect the top 10 and plot in different colours
+	// restrict score by most complete circle
+
+	float r1, r2;
+	r1 = 70;
+	r2 = 120;
+	
+	//circle_finder(dst, r1, r2, bordersize, image);
+	//cv::waitKey(0);
+>>>>>>> 72166f741c9d77f15944a0b8d9c19877ba328cee
 
 
 	//fourier(image, test);
@@ -182,6 +213,7 @@ int main(int argc, char* argv[])
 // 	}
 
 
+<<<<<<< HEAD
 // 	//Terrain navigation
 // 	//int position;
 // 	//position = first_image(imPath.c_str());
@@ -189,6 +221,15 @@ int main(int argc, char* argv[])
 // 	vector<Mat> pics = { imread(imPath0.c_str(), 1), imread(imPath1.c_str(), 1), imread(imPath2.c_str(), 1), imread(imPath3.c_str(), 1), imread(imPath4.c_str(), 1) };
 // 
 // 	int x = test3(pics);
+=======
+	//Terrain navigation
+	//int position;
+	//position = first_image(imPath.c_str());
+
+	vector<Mat> pics = { imread(imPath0.c_str(), 1), imread(imPath1.c_str(), 1), imread(imPath2.c_str(), 1), imread(imPath3.c_str(), 1), imread(imPath4.c_str(), 1) };
+
+	int x = test3(pics);
+>>>>>>> 72166f741c9d77f15944a0b8d9c19877ba328cee
 	
 	//Mat pic1 = imread(imPath1.c_str(), 1);
 	//Mat pic2 = imread(imPath2.c_str(), 1);

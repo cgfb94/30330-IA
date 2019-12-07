@@ -355,9 +355,6 @@ float overlap_square(Mat A, Mat B, int rot_step, int rot_range, double tol=0) {
 	return error;
 }
 
-
-
-
 float** compare_features_SQUARES(vector<picture> img, int size1, int size2, int rot_step, int rot_range) {
 	
 	//Check if input sizes are odd, if not, correct.

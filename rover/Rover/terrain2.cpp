@@ -18,15 +18,73 @@ using namespace std;
 using namespace cv;
 //using namespace xfeatures2d;
 
+pair<float, float> normal_distribution(vector<float> values, vector<float> weights) {
+	float avg = 0; float sd = 0; float Z = 0;
+	int n = values.size();
+
+	for (int i = 0; i < n; i++) {
+		avg = avg + (values[i] * weights[i]);
+		Z = Z + weights[i];
+	}
+	avg = avg / Z;
+
+	for (int i = 0; i < n; i++) {
+		sd = sd + (values[i] - avg) * (values[i] - avg);
+	}
+	sd = sqrt(sd / (Z - 1));
+
+	pair<float, float> N{ avg, sd };
+	return N;
+}
+
+/*
+
+float weighted_average(vector<float> values, vector<float> weights) {
+	float avg = 0; float Z = 0;
+	int n = values.size();
+
+	for (int i = 0; i < n; i++) {
+		avg = avg + (values[i] * weights[i]);
+		Z = Z + weights[i];
+	}
+	avg = avg / Z;
+
+	return avg;
+}
+
+KPstat orderbydistancetoX(vector<float> values, float avg) {
+	int n = values.size();
+
+	KPstat S;
+	S.avg = avg; S.values = values;
+	S.ranked = { values[0] }, S.avg_dist = { abs({ values[0] - avg }) }; S.N = { 0 };
+	
+	for (int i = 1; i < n; i++) {
+		float dist = values[i] - avg;
+		if (dist >= S.avg_dist.back()) {
+			S.ranked.push_back(values[i]);
+			S.avg_dist.push_back(dist);
+			S.N.push_back(i);
+		}
+		else if (dist <= S.avg_dist[0]) {
+			S.ranked.insert(S.ranked.begin(), values[i]);
+			S.avg_dist.insert(S.avg_dist.begin(), dist);
+			S.N.insert(S.N.begin(), i);
+		}
+	}
+
+	return S;
+}
+
 Mat translateImg(Mat& img, int offsetx, int offsety) {
 	Mat trans_mat = (Mat_<double>(2, 3) << 1, 0, offsetx, 0, 1, offsety);
 	warpAffine(img, img, trans_mat, img.size());
 	return img;
 }
 
+*/
 
-
-picture newpic_relpos(picture previous, Mat pic2, int n_kp = 7, int method = 1) {
+picture newpic_relpos(picture previous, Mat pic2, int n_kp = 15, int method = 1) {
 
 	method = 1;
 
@@ -161,14 +219,57 @@ picture newpic_relpos(picture previous, Mat pic2, int n_kp = 7, int method = 1) 
 
 	// CALCULATE ROTATION AND POSITION DIFFERENCE
 	location pos;
-	//pos.centre = abs_vec[0];
-	/*for (int i = 0; i < 4; i++) {
-		pos.corner[i] = abs_vec[i+1] - pos.centre;
-	}*/
+
+	// Create matrixes to store all computations
+	int nk = goodKP1.size();
+	vector<float> wC, w;
+	KPstat AZ("AZ"), Aangle("Aangle"), AX("AX"), AY("AY");
+
+	// Loop to verify zoom and rotation given by different keypoint couples:------------
+	int nit1 = 5, nit2 = 5;
+	bool show1 = true, show2 = true;
+	float numerator = 10;
+
+	// 1 - Calculate rotations and zoom:
+	for (int i = 0; i < nk; i++) {
+		for (int j = i+1; j < nk; j++) {
+			AZ.weight.push_back(numerator/(good_matches[i].distance *good_matches[i].distance) * numerator/(good_matches[j].distance *good_matches[j].distance));
+			AZ.values.push_back((euclideanDist(goodKP2[i], goodKP2[j]) / euclideanDist(goodKP1[i], goodKP1[j])));
+			float a1 = atan2(goodKP1[j].y - goodKP1[i].y, goodKP1[j].x - goodKP1[i].x);
+			float a2 = atan2(goodKP2[j].y - goodKP2[i].y, goodKP2[j].x - goodKP2[i].x);
+			Aangle.values.push_back(a1 - a2);
+		}
+	}
+	Aangle.weight = AZ.weight;
+
+	// 2 - Fit into normal distribution
+	AZ.initial_normal_distribution(show1); Aangle.initial_normal_distribution(show1);
+	 
+	for (int i = 0; i < n_kp; i++) {
+		// 3 - Order points by distance to mean --> eliminate furthest
+		AZ.destroy_outliers(0.15); Aangle.destroy_outliers(0.15);
+		// 4 - Rely on common results
+		AZ = Aangle.useCommonInfo(AZ);
+		// 5 - repeat until outlier percentage is lower than %
+		AZ.normal_distribution(show1); Aangle.normal_distribution(show1);
+		cout << "<< { ";
+		for (int j = 0; j < AZ.N.size(); j++) {
+			cout << AZ.N[j]/n_kp << ", ";
+		}
+		cout << "}\n";
+	}
+	// endloop---------------------------------------------------------------------------
+
+	//pos.dz = AZ.avg;
+	//pos.d_angle = Aangle.avg;
+	//pos.error = max(Aangle.sd, AZ.sd);
+
+	// old %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	pos.dz = (euclideanDist(goodKP2[0], goodKP2[1]) / euclideanDist(goodKP1[0], goodKP1[1])); //* previous.captured_from.z
 	float a1 = atan2(goodKP1[1].y - goodKP1[0].y, goodKP1[1].x - goodKP1[0].x);
 	float a2 = atan2(goodKP2[1].y - goodKP2[0].y, goodKP2[1].x - goodKP2[0].x);
 	pos.d_angle = a1 - a2;
+	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 	// Zoom and rotate second image to match second one's characteristics
@@ -181,34 +282,79 @@ picture newpic_relpos(picture previous, Mat pic2, int n_kp = 7, int method = 1) 
 		aux2[k].y = rot.at<double>(1, 0) * goodKP1[k].x + rot.at<double>(1, 1) * goodKP1[k].y + rot.at<double>(1, 2);
 		circle(aux, aux2[k], 10, Scalar(255), 2);
 	}
-	// ... then, compare both and get relative displacement between keypoints:
 
-	// Loop to verify results given by different keypoint couples:------------
-	pos.traslation.x = 0; pos.traslation.y = 0; float N = goodKP2.size();
-	for (int k = 0; k < N; k++) {
-		pos.traslation.x = pos.traslation.x + (goodKP2[k].x - aux2[k].x);
-		pos.traslation.y = pos.traslation.y + (goodKP2[k].y - aux2[k].y);
+
+	// Loop to verify translation given by different keypoint couples:------------
+	//float sfx = 0.81; float sfy = 0.7;
+	float sfx = 1; float sfy = 1;
+
+	// 1 - Calculate translations:
+	bool getpreviousinfo = false;
+	if (getpreviousinfo){
+		//Taking into account previously found outliers
+		vector<int> common = AZ.findCommonInfo(Aangle);
+		for (int i = 0; i < common.size(); i++) {
+			AX.weight.push_back(numerator / (good_matches[common[i]].distance *good_matches[common[i]].distance));
+			AX.values.push_back(sfx * max((float)-10000, min((float)10000,  goodKP2[common[i]].x - aux2[common[i]].x)));
+			AY.values.push_back(sfy* max((float)-10000, min((float)10000,  goodKP2[common[i]].y - aux2[common[i]].y)));
+		}
 	}
-	pos.traslation.x = pos.traslation.x / N;
-	pos.traslation.y = pos.traslation.y / N;
-	pos.step_distance = euclideanDist(Point2f(0, 0), pos.traslation);
+	else for (int i = 0; i < nk; i++) {
+		AX.weight.push_back(numerator / (good_matches[i].distance *good_matches[i].distance));
+		AX.values.push_back(sfx * max((float)-10000, min((float)10000, (goodKP2[i].x - aux2[i].x))));
+		AY.values.push_back(sfy * max((float)-10000, min((float)10000, (goodKP2[i].y - aux2[i].y))));
+		//cout << "\n (" << i << ") --> AX = " << AX.values[i]  << " ||  AY = " << AY.values[i] << "  || W = " << AX.weight[i];
+	}
+	//AX.weight[0] = AX.weight[0] * 3; AX.weight[1] = AX.weight[1] * 2;
+	AY.weight = AX.weight;
+
+	// 2 - Fit into normal distribution
+	AX.initial_normal_distribution(show2); AY.initial_normal_distribution(show2);
+
+	for (int i = 0; i <n_kp/1.5; i++) {
+		// 3 - Order points by distance to mean --> eliminate furthest
+		AX.destroy_outliers(0.1); AY.destroy_outliers(0.1);
+		// 4 - Rely on common results
+		AY = AX.useCommonInfo(AY);
+		// 5 - repeat until outlier percentage is lower than %
+		AX.normal_distribution(show2); AY.normal_distribution(show2);
+		cout << "<< { ";
+		for (int j = 0; j < AX.N.size(); j++) {
+			cout << AX.N[j] << ", ";
+		}
+		cout << "}\n";
+	}
+	
+
 	// endloop----------------------------------------------------------------
+
+	pos.traslation.x = AX.avg;
+	pos.traslation.y = AY.avg;
+	pos.error = max(pos.error, AX.sd); pos.error = max(pos.error, AY.sd);
+	pos.step_distance = euclideanDist(Point2f(0, 0), pos.traslation);
+
+	//old %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+	//pos.traslation.x = (goodKP2[0].x - aux2[0].x);
+	//pos.traslation.y = (goodKP2[0].y - aux2[0].y);
+	//pos.step_distance = euclideanDist(Point2f(0, 0), pos.traslation);
+	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 	// Get the correct relative measurements watching the loop results
 
 	// Using relative measurements compute absolute location
+
+
 	pos.z = (1/pos.dz) * previous.captured_from.z;
 	pos.angle = pos.d_angle + previous.captured_from.angle;
 	pos.abs_centre = pos.traslation + previous.captured_from.abs_centre;
 	pos.rel_homography = H;
-	pos.error = previous.captured_from.error;
+	pos.error = pos.error+previous.captured_from.error;
 
 	// Return:
 	newpic.captured_from = pos;
-		return newpic;
+	return newpic;
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 int display_map(vector<picture> piece) {
@@ -438,8 +584,8 @@ int test3(vector<Mat> pic) {
 	for (int i = 1; i < n; i++) {
 		cout << "\n\n>> FRAME " << i;
 		frame.push_back(newpic_relpos(frame[i - 1], pic[i]));
-		cout << "\nFrame (" << i << ") moved " << frame[i].captured_from.step_distance << "units -->  dX = " << frame[i].captured_from.traslation.x << ", dY = " << frame[i].captured_from.traslation.y << ", dZ = " << frame[i].captured_from.dz << "; dAngle =  " << frame[i].captured_from.angle;
-		cout << "\n                                   X = " << frame[i].captured_from.abs_centre.x << ",  Y = " << frame[i].captured_from.abs_centre.y << ",  Z = " << frame[i].captured_from.z;
+		cout << "\nFrame (" << i << ") moved " << frame[i].captured_from.step_distance << "units -->  dX = " << frame[i].captured_from.traslation.x << ", dY = " << frame[i].captured_from.traslation.y << ", dZ = " << frame[i].captured_from.dz << "; dAngle =  " << frame[i].captured_from.d_angle;
+		cout << "\n                                   X = " << frame[i].captured_from.abs_centre.x << ",  Y = " << frame[i].captured_from.abs_centre.y << ",  Z = " << frame[i].captured_from.z << "; Angle =  " << frame[i].captured_from.angle << ",  >> ERROR << = " << frame[i].captured_from.error;
 
 	}
 
