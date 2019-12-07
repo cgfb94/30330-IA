@@ -18,15 +18,73 @@ using namespace std;
 using namespace cv;
 //using namespace xfeatures2d;
 
+pair<float, float> normal_distribution(vector<float> values, vector<float> weights) {
+	float avg = 0; float sd = 0; float Z = 0;
+	int n = values.size();
+
+	for (int i = 0; i < n; i++) {
+		avg = avg + (values[i] * weights[i]);
+		Z = Z + weights[i];
+	}
+	avg = avg / Z;
+
+	for (int i = 0; i < n; i++) {
+		sd = sd + (values[i] - avg) * (values[i] - avg);
+	}
+	sd = sqrt(sd / (Z - 1));
+
+	pair<float, float> N{ avg, sd };
+	return N;
+}
+
+/*
+
+float weighted_average(vector<float> values, vector<float> weights) {
+	float avg = 0; float Z = 0;
+	int n = values.size();
+
+	for (int i = 0; i < n; i++) {
+		avg = avg + (values[i] * weights[i]);
+		Z = Z + weights[i];
+	}
+	avg = avg / Z;
+
+	return avg;
+}
+
+KPstat orderbydistancetoX(vector<float> values, float avg) {
+	int n = values.size();
+
+	KPstat S;
+	S.avg = avg; S.values = values;
+	S.ranked = { values[0] }, S.avg_dist = { abs({ values[0] - avg }) }; S.N = { 0 };
+	
+	for (int i = 1; i < n; i++) {
+		float dist = values[i] - avg;
+		if (dist >= S.avg_dist.back()) {
+			S.ranked.push_back(values[i]);
+			S.avg_dist.push_back(dist);
+			S.N.push_back(i);
+		}
+		else if (dist <= S.avg_dist[0]) {
+			S.ranked.insert(S.ranked.begin(), values[i]);
+			S.avg_dist.insert(S.avg_dist.begin(), dist);
+			S.N.insert(S.N.begin(), i);
+		}
+	}
+
+	return S;
+}
+
 Mat translateImg(Mat& img, int offsetx, int offsety) {
 	Mat trans_mat = (Mat_<double>(2, 3) << 1, 0, offsetx, 0, 1, offsety);
 	warpAffine(img, img, trans_mat, img.size());
 	return img;
 }
 
+*/
 
-
-picture newpic_relpos(picture previous, Mat pic2, int n_kp = 60, int method = 1) {
+picture newpic_relpos(picture previous, Mat pic2, int n_kp = 15, int method = 1) {
 
 	method = 1;
 
@@ -164,81 +222,47 @@ picture newpic_relpos(picture previous, Mat pic2, int n_kp = 60, int method = 1)
 
 	// Create matrixes to store all computations
 	int nk = goodKP1.size();
-	if (nk > 100) cout << "\n FATAL ERROR --> MATRIX OVERFLOW. You have more keypoints than matrix slots.";
-
-	//float** err;
-	//err = new float* [n[0]];
-	//for (int i = 0; i < n[0]; i++) err[i] = new float[n[1]];
-
-	float **AZ, **Aangle; bool **like;
-	AZ = new float* [100]; Aangle = new float* [100]; like = new bool* [100]; bool like_v[100];
-	for (int i = 0; i < nk; i++) { 
-		AZ[i] = new float[100]; Aangle[i] = new float[100];
-		like[i] = new bool [100];
-		for (int j = i+1; j < nk; j++) like[i][j] = true;
-		like_v[i] = true;
-	}
+	vector<float> wC, w;
+	KPstat AZ("AZ"), Aangle("Aangle"), AX("AX"), AY("AY");
 
 	// Loop to verify zoom and rotation given by different keypoint couples:------------
-	int nit = 3; float tol = 0.9; float ra1 = 2; float maxzoom = 100;
-	float avg_AZ = 0; float avg_Aangle = 0;
-	float sd_AZ = 0;  float sd_Aangle = 0;
+	int nit1 = 5, nit2 = 5;
+	bool show1 = true, show2 = true;
+	float numerator = 10;
 
-	for (int k = 0; k < nit; k++) {
-		float counter = 0;
-		avg_AZ = 0; avg_Aangle = 0;
-		sd_AZ = 0;  sd_Aangle = 0;
-		for (int i = 0; i < nk; i++) {
-			for (int j = i+1; j < nk; j++) {
-				if (like[i][j]) {
-					counter++;
-					AZ[i][j] = min(maxzoom, (euclideanDist(goodKP2[i], goodKP2[j]) / euclideanDist(goodKP1[i], goodKP1[j]))); //* previous.captured_from.z
-					AZ[j][i] = AZ[i][j];
-					avg_AZ = avg_AZ + AZ[i][j];
-					float a1 = atan2(goodKP1[j].y - goodKP1[i].y, goodKP1[j].x - goodKP1[i].x);
-					float a2 = atan2(goodKP2[j].y - goodKP2[i].y, goodKP2[j].x - goodKP2[i].x);
-					Aangle[i][j] = a1 - a2;
-					Aangle[j][i] = Aangle[i][j];
-					avg_Aangle = avg_Aangle + Aangle[i][j];
-					//cout << "\n > AZ(" << i << "," << j << ") = " << AZ[i][j] << ";  Angle(" << i << ", " << j << ") = " << Aangle[i][j];
-					//if (AZ[i][j] == maxzoom) cout << "<<<<<<<< FAIL:  p1 = (" << goodKP1[i].x << "," << goodKP1[i].y << "); p2 = (" << goodKP1[j].x << "," << goodKP1[j].y << ") || p1' = (" << goodKP2[i].x << "," << goodKP2[i].y << "); p2 = (" << goodKP2[j].x << "," << goodKP2[j].y << ")";
-				}
-			}
-		}
-		avg_AZ = avg_AZ / counter; avg_Aangle = avg_Aangle / counter;
-
-		// Compute standard deviation
-		for (int i = 0; i < nk; i++) {
-			for (int j = i+1; j < nk; j++) {
-				if (like[i][j]) {
-					sd_AZ = sd_AZ + (AZ[i][j] - avg_AZ) * (AZ[i][j] - avg_AZ);
-					sd_Aangle = sd_Aangle + (Aangle[i][j] - avg_Aangle) * (Aangle[i][j] - avg_Aangle);
-				}
-			}
-		}
-		sd_AZ = sqrt(sd_AZ / (counter - 1));
-		sd_Aangle = sqrt(sd_Aangle / (counter - 1));
-
-		// Evaluate measurements
-		for (int i = 0; i < nk; i++) {
-			counter = 0;
-			for (int j = 0; j < nk; j++) {
-				if (like[i][j]) {
-					if ((abs(AZ[i][j]) > (avg_AZ + ra1*sd_AZ)) || ((abs(Aangle[i][j]) > (avg_Aangle + ra1*sd_Aangle)))) { like[i][j] = false; }
-				}
-				if (!like[i][j]) {
-					counter++;
-				}
-			}
-			if (counter/nk > tol) like_v[i] = false;
+	// 1 - Calculate rotations and zoom:
+	for (int i = 0; i < nk; i++) {
+		for (int j = i+1; j < nk; j++) {
+			AZ.weight.push_back(numerator/(good_matches[i].distance *good_matches[i].distance) * numerator/(good_matches[j].distance *good_matches[j].distance));
+			AZ.values.push_back((euclideanDist(goodKP2[i], goodKP2[j]) / euclideanDist(goodKP1[i], goodKP1[j])));
+			float a1 = atan2(goodKP1[j].y - goodKP1[i].y, goodKP1[j].x - goodKP1[i].x);
+			float a2 = atan2(goodKP2[j].y - goodKP2[i].y, goodKP2[j].x - goodKP2[i].x);
+			Aangle.values.push_back(a1 - a2);
 		}
 	}
-	cout << "\n Average dZ = " << avg_AZ << " --> err: = " << sd_AZ << "\n Average dangle = " << avg_Aangle << " --> err: = " << sd_Aangle;
-	// endloop----------------------------------------------------------------
+	Aangle.weight = AZ.weight;
 
-	/*pos.dz = avg_AZ;
-	pos.d_angle = avg_Aangle;
-	pos.error = max(sd_Aangle, sd_AZ);*/
+	// 2 - Fit into normal distribution
+	AZ.initial_normal_distribution(show1); Aangle.initial_normal_distribution(show1);
+	 
+	for (int i = 0; i < n_kp; i++) {
+		// 3 - Order points by distance to mean --> eliminate furthest
+		AZ.destroy_outliers(0.15); Aangle.destroy_outliers(0.15);
+		// 4 - Rely on common results
+		AZ = Aangle.useCommonInfo(AZ);
+		// 5 - repeat until outlier percentage is lower than %
+		AZ.normal_distribution(show1); Aangle.normal_distribution(show1);
+		cout << "<< { ";
+		for (int j = 0; j < AZ.N.size(); j++) {
+			cout << AZ.N[j]/n_kp << ", ";
+		}
+		cout << "}\n";
+	}
+	// endloop---------------------------------------------------------------------------
+
+	//pos.dz = AZ.avg;
+	//pos.d_angle = Aangle.avg;
+	//pos.error = max(Aangle.sd, AZ.sd);
 
 	// old %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	pos.dz = (euclideanDist(goodKP2[0], goodKP2[1]) / euclideanDist(goodKP1[0], goodKP1[1])); //* previous.captured_from.z
@@ -261,60 +285,58 @@ picture newpic_relpos(picture previous, Mat pic2, int n_kp = 60, int method = 1)
 
 
 	// Loop to verify translation given by different keypoint couples:------------
-	float avg_AX = 0; float avg_AY = 0;
-	float sd_AX = 0;  float sd_AY = 0;
-	float AX[100]; float AY[100];
-	float maxtrans = 800; float ra2 = 1.2;
+	//float sfx = 0.81; float sfy = 0.7;
+	float sfx = 1; float sfy = 1;
 
-	for (int k = 0; k < nit; k++) {
-		float counter = 0;
-		avg_AX = 0; avg_AY = 0;
-		sd_AX = 0;  sd_AY = 0;
-		for (int i = 0; i < nk; i++) {
-			if (like_v[i]) {
-				counter++;
-				AX[i] = min(maxtrans, goodKP2[i].x - aux2[i].x);
-				avg_AX = avg_AX + AX[i];
-				AY[i] = min(maxtrans, goodKP2[i].y - aux2[i].y);
-				avg_AY = avg_AY + AY[i];
-				//cout << "\n > AX(" << i << ") = " << AX[i] << ";  AY(" << i << ") = " << AY[i];
-				//if (AX[i] == maxtrans) cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< FAIL";
-
-			}
-			
-		}
-		avg_AX = avg_AX / counter; avg_AY = avg_AY / counter;
-
-		// Compute standard deviation
-		for (int i = 0; i < nk; i++) {
-			if (like_v[i]) {
-				sd_AX = sd_AX + (AX[i] - avg_AX) * (AX[i] - avg_AX);
-				sd_AY = sd_AY + (AY[i] - avg_AY) * (AY[i] - avg_AY);
-			}
-		}
-		sd_AX = sqrt(sd_AX / (counter - 1));
-		sd_AY = sqrt(sd_AY / (counter - 1));
-
-		// Evaluate measurements
-		for (int i = 0; i < nk; i++) {
-			if (like_v[i]) {
-				if ((abs(AX[i]) > (avg_AX + ra2*sd_AX)) || ((abs(AY[i]) > (avg_AY + ra2*sd_AY)))) { like_v[i] = false; }
-			}
+	// 1 - Calculate translations:
+	bool getpreviousinfo = false;
+	if (getpreviousinfo){
+		//Taking into account previously found outliers
+		vector<int> common = AZ.findCommonInfo(Aangle);
+		for (int i = 0; i < common.size(); i++) {
+			AX.weight.push_back(numerator / (good_matches[common[i]].distance *good_matches[common[i]].distance));
+			AX.values.push_back(sfx * max((float)-10000, min((float)10000,  goodKP2[common[i]].x - aux2[common[i]].x)));
+			AY.values.push_back(sfy* max((float)-10000, min((float)10000,  goodKP2[common[i]].y - aux2[common[i]].y)));
 		}
 	}
+	else for (int i = 0; i < nk; i++) {
+		AX.weight.push_back(numerator / (good_matches[i].distance *good_matches[i].distance));
+		AX.values.push_back(sfx * max((float)-10000, min((float)10000, (goodKP2[i].x - aux2[i].x))));
+		AY.values.push_back(sfy * max((float)-10000, min((float)10000, (goodKP2[i].y - aux2[i].y))));
+		//cout << "\n (" << i << ") --> AX = " << AX.values[i]  << " ||  AY = " << AY.values[i] << "  || W = " << AX.weight[i];
+	}
+	//AX.weight[0] = AX.weight[0] * 3; AX.weight[1] = AX.weight[1] * 2;
+	AY.weight = AX.weight;
 
-	cout << "\n Average dX = " << avg_AX << "--> err: = " << sd_AX << "\n Average dY = " << avg_AY << "--> err: = " << sd_AY;
+	// 2 - Fit into normal distribution
+	AX.initial_normal_distribution(show2); AY.initial_normal_distribution(show2);
+
+	for (int i = 0; i <n_kp/1.5; i++) {
+		// 3 - Order points by distance to mean --> eliminate furthest
+		AX.destroy_outliers(0.1); AY.destroy_outliers(0.1);
+		// 4 - Rely on common results
+		AY = AX.useCommonInfo(AY);
+		// 5 - repeat until outlier percentage is lower than %
+		AX.normal_distribution(show2); AY.normal_distribution(show2);
+		cout << "<< { ";
+		for (int j = 0; j < AX.N.size(); j++) {
+			cout << AX.N[j] << ", ";
+		}
+		cout << "}\n";
+	}
+	
 
 	// endloop----------------------------------------------------------------
 
-	//pos.traslation.x = avg_AX;
-	//pos.traslation.y = avg_AY;
-	//pos.error = max(pos.error, sd_AX); pos.error = max(pos.error, sd_AY);
+	pos.traslation.x = AX.avg;
+	pos.traslation.y = AY.avg;
+	pos.error = max(pos.error, AX.sd); pos.error = max(pos.error, AY.sd);
+	pos.step_distance = euclideanDist(Point2f(0, 0), pos.traslation);
 
 	//old %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-	pos.traslation.x = (goodKP2[0].x - aux2[0].x);
-	pos.traslation.y = (goodKP2[0].y - aux2[0].y);
-	pos.step_distance = euclideanDist(Point2f(0, 0), pos.traslation);
+	//pos.traslation.x = (goodKP2[0].x - aux2[0].x);
+	//pos.traslation.y = (goodKP2[0].y - aux2[0].y);
+	//pos.step_distance = euclideanDist(Point2f(0, 0), pos.traslation);
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 	// Get the correct relative measurements watching the loop results
@@ -333,7 +355,6 @@ picture newpic_relpos(picture previous, Mat pic2, int n_kp = 60, int method = 1)
 	return newpic;
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 int display_map(vector<picture> piece) {
