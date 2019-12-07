@@ -1,7 +1,12 @@
 #pragma once
 #pragma warning(disable : 4996)
 
-#include "rover.h"
+#include <opencv2/opencv.hpp>
+#include "opencv2/features2d/features2d.hpp"
+#include "opencv2/opencv_modules.hpp"
+#include "opencv2/core.hpp"
+#include "opencv2/calib3d.hpp"
+#include "opencv2/imgproc.hpp"
 
 using namespace cv; using namespace std;
 
@@ -72,11 +77,36 @@ public:
 		avg = avg / Z;
 
 		for (int i = 0; i < n; i++) {
-			if (values[i] > -1000 && values[i] < 1000) sd = sd + (values[i] - avg) * (values[i] - avg);
+			if (values[i] > -1000 && values[i] < 1000) sd = sd + weight[i]*(values[i] - avg) * (values[i] - avg);
+		}
+		sd = sqrt(sd / (Z - 1.0));
+
+		if (show) cout << "\n Normal distribution --> " << name << " ~ N ( " << avg << ", " << sd << " ),  from " << n << " values.";
+	}
+	int normal_distribution(bool show = false) {
+		avg = 0; sd = 0; float Z = 0;
+		int n = ranked.size();
+		if (n == 0) {
+			cout << "\n WARNING: Data still in raw state. Performing instead <<initial normal distribution>>.";
+			initial_normal_distribution(show);
+			return 0;
+		}
+
+		for (int i = 0; i < n; i++) {
+			if (ranked[i] > -1000 && ranked[i] < 1000) {
+				avg = avg + min((float)10000, (ranked[i] * w_ranked[i]));
+				Z = Z + w_ranked[i];
+			}
+		}
+		avg = avg / Z;
+
+		for (int i = 0; i < n; i++) {
+			if (ranked[i] > -1000 && ranked[i] < 1000) sd = sd + w_ranked[i] * (ranked[i] - avg) * (ranked[i] - avg);
 		}
 		sd = sqrt(sd / (Z - 1));
 
 		if (show) cout << "\n Normal distribution --> " << name << " ~ N ( " << avg << ", " << sd << " ),  from " << n << " values.";
+		return 0;
 	}
 	void weighted_average() {
 		avg = 0; float Z = 0;
@@ -159,43 +189,33 @@ public:
 				}
 		}
 	}
-	void destroy_outliers(float rate = 0.1) {
-		if (avg == -10000) weighted_average();
-		if (ranked.empty()) {
-			initial_orderbydistancetoX();
-			return;
-		}
+	bool destroy_outliers(float rate = 0.1, float tol = 1) {
+		if (avg == -10000) initial_normal_distribution();
+		if (ranked.empty()) initial_orderbydistancetoX();
 		else orderbydistancetoX();
 		int n = ranked.size();
 		int good = (float)n * (1.0 - rate);
-		ranked = subvector(ranked, 0, good);
-		w_ranked = subvector(w_ranked, 0, good);
-		N = subvector(N, 0, good);
-	}
-	int normal_distribution(bool show = false) {
-		avg = 0; sd = 0; float Z = 0;
-		int n = ranked.size();
-		if (n == 0) {
-			cout << "\n WARNING: Data still in raw state. Performing instead <<initial normal distribution>>.";
-			initial_normal_distribution(show);
-			return 0;
-		}
 
-		for (int i = 0; i < n; i++) {
-			if (ranked[i] > -1000 && ranked[i] < 1000) {
-				avg = avg + min((float)10000, (ranked[i] * w_ranked[i]));
-				Z = Z + w_ranked[i];
-			}
+		// Check if we are eliminating good points
+		bool unsure = true;
+		while (unsure && good<n){
+			float deviation = abs(ranked[good] - avg);
+			float range = tol * sd;
+			if (deviation > range) unsure = false;
+			else good++;
 		}
-		avg = avg / Z;
-
-		for (int i = 0; i < n; i++) {
-			if (ranked[i] > -1000 && ranked[i] < 1000) sd = sd + (ranked[i] - avg) * (ranked[i] - avg);
+	
+		bool too_much = false;
+		if (good < n - 1) {
+			ranked = subvector(ranked, 0, good);
+			w_ranked = subvector(w_ranked, 0, good);
+			N = subvector(N, 0, good);
 		}
-		sd = sqrt(sd / (Z - 1));
-
-		if (show) cout << "\n Normal distribution --> " << name << " ~ N ( " << avg << ", " << sd << " ),  from " << n << " values.";
-		return 0;
+		else {
+			too_much = true;
+		}
+		// Return a warning if we do not need to clean more
+		return too_much;
 	}
 	vector<int> findCommonInfo(KPstat S) {
 		vector <int> common;

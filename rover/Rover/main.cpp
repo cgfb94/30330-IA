@@ -6,6 +6,7 @@
 
 #include "mars.h"
 #include "rover.h"
+#include "compass.h"
 
 #include <random>
 #include <tuple>
@@ -110,7 +111,7 @@ circle_finder(cv::Mat ProcessedImage, float min_rad, float max_rad, int bordersi
 	std::cout << "delta X: " << get<0>(deltas) << "\ndelta Y: " << get<1>(deltas) << "\ndelta Z%: " << get<2>(deltas) << '\n';
 
 	cv::imshow("RANSAC Example", Original);
-	cv::waitKey(0);
+	//cv::waitKey(0);
 
 	
 	return deltas;
@@ -124,119 +125,82 @@ int main(int argc, char* argv[])
 // use the new list of contours to detect circles
 {
 	//IplImage* Image = webcam_capture();
-<<<<<<< HEAD
 
-// 	std::string imPath0 = utils::getAbsImagePath("Images\\mars8.jpeg");
-// 	std::string imPath1 =  utils::getAbsImagePath("Images\\mars7.jpeg"); //7,6
-// 	std::string imPath2 =  utils::getAbsImagePath("Images\\mars6.jpeg");
-// 	std::string imPath3 = utils::getAbsImagePath("Images\\mars5.jpeg");
-// 	std::string imPath4 = utils::getAbsImagePath("Images\\mars3.jpeg");
-// 	// Produce some contour images
-// 	//if (ex4::contour(imPath.c_str())) return 1;
-// 	std::string impath = utils::getAbsImagePath("Images\\mars5.jpeg");
-// 	//Look for circles
-// 	//cv::Mat fourierIm = fourier(impath.c_str());
-// 	
-// 	std::string imPath =  utils::getAbsImagePath("Images\\mars4.jpeg");
-	//imshow("CAM", webcam_capture());
-	cv::Mat imcap = webcam_capture_main(true, "s678-x0.y0-0.186m-L1-R1.jpg");
+	vector<string> imPath = {
+		utils::getAbsImagePath("Images\\678B\\1.jpg"),
+		utils::getAbsImagePath("Images\\678B\\2.jpg"),
+		utils::getAbsImagePath("Images\\678B\\3.jpg"),
+		utils::getAbsImagePath("Images\\678B\\4.jpg"),
+		utils::getAbsImagePath("Images\\678B\\5.jpg")
+	};
+	int dataSize = imPath.size();
 
-// 	//cv::waitKey(0);
-// 	//cv::Mat image = (utils::loadImageG(impath));
-// 	cv::Mat dst;
-// // 	cv::Mat image = cv::imread(imPath.c_str(), 1);
-// // 	cv::resize(image, image, cv::Size(), 0.3, 0.3);
-	cv::Mat processed = preprocess_main(imcap, 1);
- 	int bordersize = 0;
-// 	copyMakeBorder(processed, dst, bordersize, bordersize, bordersize, bordersize, BORDER_CONSTANT);
-// 	// collect the top 10 and plot in different colours
-// 	// restrict score by most complete circle
-// 
- 	float r1, r2;
-	// 640 480
- 	r1 = 50;
- 	r2 = 120;
-// 	
- 	circle_finder(processed, r1, r2, bordersize, imcap);
- 	cv::waitKey(0);
-=======
-	std::string imPath0 = utils::getAbsImagePath("Images\\mars8.jpeg");
-	std::string imPath1 =  utils::getAbsImagePath("Images\\mars6.jpeg"); //7,6
-	std::string imPath2 =  utils::getAbsImagePath("Images\\mars7.jpeg");
-	std::string imPath3 = utils::getAbsImagePath("Images\\mars3.jpeg");
-	std::string imPath4 = utils::getAbsImagePath("Images\\mars5.jpeg");
-	// Produce some contour images
-	//if (ex4::contour(imPath.c_str())) return 1;
-	std::string impath = utils::getAbsImagePath("Images\\mars5.jpeg");
-	//Look for circles
-	//cv::Mat fourierIm = fourier(impath.c_str());
-	std::string imPath =  utils::getAbsImagePath("Images\\mars5.jpeg");
+	vector<picture> frame(1);
 
-	//cv::Mat image = (utils::loadImageG(impath));
-	cv::Mat dst;
-	cv::Mat image = cv::imread(imPath.c_str(), 1);
-	cv::resize(image, image, cv::Size(), 0.3, 0.3);
-	cv::Mat processed = preprocess_main(image, 1);
-	int bordersize = 10;
-	copyMakeBorder(processed, dst, bordersize, bordersize, bordersize, bordersize, BORDER_CONSTANT);
-	// collect the top 10 and plot in different colours
-	// restrict score by most complete circle
+	// 1 - INITIALIZE ORIGIN
+	cv::Mat Image = cv::imread(imPath[0].c_str(), 1);
+	cv::Mat Image_360x640 = cv::Mat(360, 640, CV_8UC3, Scalar());
+	cv::resize(Image, Image_360x640, Image_360x640.size());
+	frame[0].original = Image_360x640;
+	frame[0].captured_from.error = 0;
+	frame[0].captured_from.z = 250; //mm
 
-	float r1, r2;
-	r1 = 70;
-	r2 = 120;
+	float focalLength = 1200; //pixels
+	float realR = 50 / 2; //mm
+	float R_error = 0.1; //%
 	
-	//circle_finder(dst, r1, r2, bordersize, image);
-	//cv::waitKey(0);
->>>>>>> 72166f741c9d77f15944a0b8d9c19877ba328cee
+// 2 - Find circle in first image
+	//cv::Mat processed = preprocess_main(frame[0].original, 1);
+	//float R = estimate_radius(frame[0].captured_from.z, focalLength, realR); //pixels
+	//tuple<float, float, float> circ_centre = circle_finder(processed, R * (1 - R_error), R * (1 + R_error), 0, frame[0].original);
+	//frame[0].circle_abs = Point2f(get<0>(circ_centre), get<1>(circ_centre)); frame[0].circle_rel = frame[0].circle_abs;
+	//frame[0].circle_dZ = get<2>(circ_centre);
+	//frame[0].circle_Z = (1 / frame[0].circle_dZ) * frame[0].captured_from.z;
+
+	for (int i = 1; i < dataSize; i++) {
+
+		cv::Mat Image = cv::imread(imPath[i].c_str(), 1);
+		cv::Mat Image_360x640 = cv::Mat(360, 640, CV_8UC3, Scalar());
+		cv::resize(Image, Image_360x640, Image_360x640.size());
+
+		// 3 - Run terrain recognition to see how we moved
+		cout << "\n\n>> FRAME " << i;
+		frame.push_back(newpic_relpos(frame[i - 1], Image_360x640));
+		cout << "\nFrame (" << i << ") moved " << frame[i].captured_from.step_distance << "units -->  dX = " << frame[i].captured_from.traslation.x << ", dY = " << frame[i].captured_from.traslation.y << ", dZ = " << frame[i].captured_from.dz << "; dAngle =  " << frame[i].captured_from.d_angle;
+		cout << "\n                                   X = " << frame[i].captured_from.abs_centre.x << ",  Y = " << frame[i].captured_from.abs_centre.y << ",  Z = " << frame[i].captured_from.z << "; Angle =  " << frame[i].captured_from.angle << ",  >> ERROR << = " << frame[i].captured_from.error;
+
+		// If accumulated error is too high compare with previous images to reduce it
+		if (frame[i].captured_from.error > 50) {
+			picture aux = frame[i];
+			for (int j = i - 1; j >= 0; j--) {
+				aux = newpic_relpos(frame[j], frame[i].original);
+				if (aux.captured_from.error < frame[i].captured_from.error) frame[i] = aux;
+			}
+		}
+		if (frame[i].captured_from.error > 500) {
+			cout << "\n\n ERROR IS TOO BIG TO HANDLE IT... USE A FKING GPS MAAAAAN!!!";
+			return 0;
+		}
 
 
-	//fourier(image, test);
-	// write a function  that accepts the max/min radii 
-	// compare with the output of the hough circle algorithm
+		// 4 - Find circle
+		//cv::Mat processed = preprocess_main(frame[i].original, 1);
+		//float R = estimate_radius(frame[i].captured_from.z, focalLength, realR); //pixels
+		//tuple<float, float, float> circ_centre = circle_finder(processed, R * (1 - R_error), R * (1 + R_error), 0);
+		//frame[i].circle_rel = Point2f(get<0>(circ_centre), get<1>(circ_centre));
+		//frame[i].circle_abs = frame[i].circle_rel + frame[i].captured_from.abs_centre;
+		//frame[i].circle_dZ = get<2>(circ_centre);
+		//frame[i].circle_Z = (1 / frame[i].circle_dZ) * frame[i].captured_from.z;
 
-// 	Mat canny_output;
-// 	vector<vector<Point> > contours;
-// 	vector<Vec4i> hierarchy;
-// 
-// 	/// Detect edges using canny
-// 	Canny(processed, canny_output, 150, 150 * 2, 3);
-// 	/// Find contours
-// 	findContours(canny_output, contours, hierarchy, CV_RETR_LIST, CV_CHAIN_APPROX_NONE, Point(0, 0));
-// 
-// 	/// Draw contours
-// 	Mat drawing = Mat::zeros(canny_output.size(), CV_8UC3);
-// 	for (int i = 0; i < contours.size(); i++)
-// 	{
-// 		Scalar color = Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
-// 		drawContours(drawing, contours, i, color, 2, 8, hierarchy, 0, Point());
-// 	}
+		// 5 - DISPLAY COLLAGE
+		cout << "\n\n DRAWING AREA MAP:";
+	}
 
+	display_map(frame, 0.8);
 
-<<<<<<< HEAD
-// 	//Terrain navigation
-// 	//int position;
-// 	//position = first_image(imPath.c_str());
-// 
-// 	vector<Mat> pics = { imread(imPath0.c_str(), 1), imread(imPath1.c_str(), 1), imread(imPath2.c_str(), 1), imread(imPath3.c_str(), 1), imread(imPath4.c_str(), 1) };
-// 
-// 	int x = test3(pics);
-=======
-	//Terrain navigation
-	//int position;
-	//position = first_image(imPath.c_str());
+	cv::waitKey(0);
 
-	vector<Mat> pics = { imread(imPath0.c_str(), 1), imread(imPath1.c_str(), 1), imread(imPath2.c_str(), 1), imread(imPath3.c_str(), 1), imread(imPath4.c_str(), 1) };
-
-	int x = test3(pics);
->>>>>>> 72166f741c9d77f15944a0b8d9c19877ba328cee
-	
-	//Mat pic1 = imread(imPath1.c_str(), 1);
-	//Mat pic2 = imread(imPath2.c_str(), 1);
-
-	//int x = test2(pic1, pic2);
-
-	//int x = test(pic1, pic2);
+	return 0;
 }
 
 
