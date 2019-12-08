@@ -14,7 +14,7 @@
 #include "GRANSAC.hpp"
 #include "CircleModel.hpp"
 
-vector<int> my_RANSAC(cv::Mat img, float r1, float r2)
+vector<float> my_RANSAC(cv::Mat img, float r1, float r2)
 {
 	
 	
@@ -35,7 +35,7 @@ vector<int> my_RANSAC(cv::Mat img, float r1, float r2)
 
 
 	GRANSAC::RANSAC<Circle2DModel, 3> Estimator;
-	Estimator.Initialize(5, 1000, r1, r2); // Threshold, iterations
+	Estimator.Initialize(2, 1000, r1, r2); // Threshold, iterations
 	int64_t start = cv::getTickCount();
 	Estimator.Estimate(CandPoints);
 	int64_t end = cv::getTickCount();
@@ -43,10 +43,14 @@ vector<int> my_RANSAC(cv::Mat img, float r1, float r2)
 	
 	
 	cvtColor(img, img, CV_GRAY2BGR);
+
+	float score = 0.0;
 	
 	auto BestInliers = Estimator.GetBestInliers();
 	if (BestInliers.size() > 0)
 	{
+		score = (float) BestInliers.size() / (float) CandPoints.size();
+
 		for (auto& Inlier : BestInliers)
 		{
 			auto RPt = std::dynamic_pointer_cast<Point2D>(Inlier);
@@ -54,9 +58,10 @@ vector<int> my_RANSAC(cv::Mat img, float r1, float r2)
 			cv::circle(img, Pt, floor(img.cols / 100), cv::Scalar(255, 100, 100), -1);
 		}
 	}
+	
 
 	auto BestLine = Estimator.GetBestModel();
-	if (!BestLine) { return vector<int> {}; }
+	if (!BestLine) { return vector<float> {}; }
 	int x = BestLine->m_x;
 	int y = BestLine->m_y; 
 	int r = BestLine->m_r;
@@ -79,7 +84,7 @@ vector<int> my_RANSAC(cv::Mat img, float r1, float r2)
 		}
 	}
 
-	return vector <int> {x, y, r};
+	return vector <float> {(float)x, (float)y, (float)r, score};
 
 // 	while (true)
 // 	{

@@ -13,7 +13,7 @@
 #include <time.h>
 #include <sstream>
 
-vector <int> 
+vector <float> 
 my_RANSAC(cv::Mat img, float r1, float r2);
 
 cv::Mat
@@ -63,29 +63,37 @@ preprocess_main(cv::Mat image, float dx = 1.0) {
 	// split b g and r into different channels, process each seperately 
 	// average the circle coords
 	threshold(src, src, 40, 255, THRESH_TOZERO | THRESH_OTSU);
- 	for (int i(0); i < 5; ++i) medianBlur(src, src, 7);
+
+	int erode_sz = 2;
+	cv::Mat element = cv::getStructuringElement(cv::MORPH_ELLIPSE,
+		cv::Size(2 * erode_sz + 1, 2 * erode_sz + 1),
+		cv::Point(erode_sz, erode_sz));
+
+	//for (int i(0); i < 1; ++i) cv::dilate(src, src, element);
+ 	for (int i(0); i < 10; ++i) medianBlur(src, src, 7);
 // 	for (int i(0); i < 5; ++i) blur(src, src, Size(3, 3));
 
 	//threshold(src_gray, src_gray, 40, 255, THRESH_TOZERO_INV | THRESH_OTSU);
 	//Laplacian(src, dst, ddepth, kernel_size, scale, delta, BORDER_DEFAULT);
-	Canny(src, abs_dst, 2, 20*5);
+	Canny(src, abs_dst, 20, 20*5);
 	
 	//convertScaleAbs(dst, abs_dst);
 	//threshold(abs_dst, abs_dst, 40, 255, THRESH_TOZERO | THRESH_OTSU);
 	return abs_dst;
 }
 
-tuple <float, float, float>
+tuple <float, float, float, float, float>
 circle_finder(cv::Mat ProcessedImage, float min_rad, float max_rad, int bordersize, cv::Mat Original = cv::Mat() )
 {
 
-	vector<int> results = my_RANSAC(ProcessedImage, min_rad, max_rad);
+	vector<float> results = my_RANSAC(ProcessedImage, min_rad, max_rad);
 	cv::Point center = cv::Point(floor(ProcessedImage.cols / 2), floor(ProcessedImage.rows / 2));
 
-	float x, y, r;
+	float x, y, r, score;
 	x = results[0] - bordersize;
 	y = results[1] - bordersize;
 	r = results[2];
+	score = results[3];
 
 	float smallestSide = (ProcessedImage.cols < ProcessedImage.rows) ? ProcessedImage.cols : ProcessedImage.rows;
 	
@@ -94,7 +102,7 @@ circle_finder(cv::Mat ProcessedImage, float min_rad, float max_rad, int bordersi
 
 	std::cout << "\n Fraction Filled: " << fraction_filled << '\n';
 
-	tuple<float, float, float> deltas{ x - center.x, y - center.y , delta_z};
+	tuple<float, float, float, float, float> deltas{ x - center.x, y - center.y , delta_z, r, score};
 
 	if (Original.empty())
 	{
@@ -129,7 +137,7 @@ int main(int argc, char* argv[])
 // by too much and then continue search on other half of the contour
 // use the new list of contours to detect circles
 {
-	std::string name = utils::getAbsImagePath("Images//678//66-s678-x6.y1-0.211m-L1-R0.jpg");
+	std::string name = utils::getAbsImagePath("Images//G//66-G-x2.y-2-0.105m-L1-R0.jpg");
 
 	cv::Mat Image = cv::imread(name.c_str(), 1);
 	cv::Mat Image_640x480 = cv::Mat(360, 640, CV_8UC3, Scalar());
@@ -138,9 +146,11 @@ int main(int argc, char* argv[])
  	int bordersize = 0;
  	float r1, r2;
 	// 640 480
-	float radius_estimate = estimate_radius(21.1, 1265, 2.5);
- 	r1 = radius_estimate * 0.9;
- 	r2 = radius_estimate * 1.1;
+	// 1265 : 678 focal length
+	// 980 : G focal length
+	float radius_estimate = estimate_radius(10.5, 960, 2.5);
+ 	r1 = radius_estimate * 0.75;
+ 	r2 = radius_estimate * 1.25;
 
  	circle_finder(processed, r1, r2, bordersize, Image_640x480);
 
