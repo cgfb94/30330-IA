@@ -23,12 +23,13 @@ int main(int argc, char* argv[])
 {
 	//IplImage* Image = webcam_capture();
 
-	bool search_for_circle = false;
+	bool search_for_circle = true;
+	float cir_err = 0;
 
 	vector<string> imPath = {
 		utils::getAbsImagePath("Images\\678B\\1.jpg"),
 		utils::getAbsImagePath("Images\\678B\\2.jpg"),
-		//utils::getAbsImagePath("Images\\678B\\3.jpg"),
+		utils::getAbsImagePath("Images\\678B\\3.jpg"),
 		//utils::getAbsImagePath("Images\\678B\\4.jpg"),
 		//utils::getAbsImagePath("Images\\678B\\5.jpg"),
 		//utils::getAbsImagePath("Images\\678B\\6.jpg"),
@@ -41,13 +42,14 @@ int main(int argc, char* argv[])
 	vector<picture> frame(1);
 
 	// 1 - INITIALIZE ORIGIN
-	cout << "\n\nFRAME 0";
+	cout << "\n\nFRAME 0  <----- Start of journey :)";
 	cv::Mat Image = cv::imread(imPath[0].c_str(), 1);
 	cv::Mat Image_360x640 = cv::Mat(360, 640, CV_8UC3, Scalar());
 	cv::resize(Image, Image_360x640, Image_360x640.size());
 	frame[0].original = Image_360x640;
 	frame[0].captured_from.error = 0;
 	frame[0].captured_from.z = 250; //mm
+	frame[0].captured_from.dz = 1;
 
 	float focalLength = 1150; //pixels
 	float realR = 50 / 2; //mm
@@ -58,14 +60,29 @@ int main(int argc, char* argv[])
 	tuple <float, float, float, float, float> circ_info;
 	if (search_for_circle) {
 		// 2 - Find circle in first image
-		std::cout << "\n\n>>   Circle search:\n";
-		cv::Mat processed = preprocess_main(frame[0].original, 1);
-		float R = estimate_radius(frame[0].captured_from.z, focalLength, realR); //pixels
-		circ_info = circle_finder(processed, R * (1.0 - R_error), R * (1.0 + R_error), 0, aux1);
-		frame[0].circle_abs = Point2f(-get<0>(circ_info), -get<1>(circ_info)); frame[0].circle_rel = frame[0].circle_abs;
-		frame[0].circle_dZ = get<2>(circ_info); frame[0].circle_Z = (1 / frame[0].circle_dZ) * frame[0].captured_from.z;
-		frame[0].circle_R = get<3>(circ_info); frame[0].circle_R = get<4>(circ_info);
-		frame[0].has_circle = true;
+		while (1) {
+			char accept = 'M';
+			std::cout << "\n\n>>   Circle search:\n";
+			cv::Mat processed = preprocess_main(frame[0].original, 1);
+			float R = estimate_radius(frame[0].captured_from.z, focalLength, realR); //pixels
+			circ_info = circle_finder(processed, R * (1.0 - R_error), R * (1.0 + R_error), 0, aux1);
+			frame[0].circle_abs = Point2f(-get<0>(circ_info), -get<1>(circ_info)); frame[0].circle_rel = frame[0].circle_abs;
+			frame[0].circle_dZ = get<2>(circ_info); frame[0].circle_Z = (1 / frame[0].circle_dZ) * frame[0].captured_from.z;
+			frame[0].circle_R = get<3>(circ_info); frame[0].circle_error = get<4>(circ_info);
+			frame[0].has_circle = true;
+			cout << "Found radius = " << get<3>(circ_info) << " <--> Previously estimated ~ N( " << R << ", " << R_error << " )";
+			while (accept != 'Y' && accept != 'y' && accept != 'N' && accept != 'n' && accept != 'X' && accept != 'x') {
+				cout << "\n Do you accept the found circle? (Y/N) | Deactivate circle search (X) :   ";
+				cv:waitKey(1);
+				cin >> accept;
+				cout << " -- Imput received: " << accept;
+			}
+			if (accept == 'Y' || accept == 'y') break;
+			if (accept == 'X' || accept == 'x') {
+				search_for_circle = false;
+				break;
+			}
+		}
 	}
 
 	for (int i = 1; i < dataSize; i++) {
@@ -100,7 +117,7 @@ int main(int argc, char* argv[])
 			break;
 		}
 
-		if (search_for_circle && frame[i].captured_from.error>30) {
+		if (search_for_circle && frame[i].captured_from.error> cir_err) {
 			// 4 - Find circle
 			std::cout << "\n\n>>   Circle search:\n";
 			frame[i].original.copyTo(aux1);
@@ -110,8 +127,9 @@ int main(int argc, char* argv[])
 			frame[i].circle_abs = Point2f(-get<0>(circ_info), - get<1>(circ_info));
 			frame[i].circle_abs = frame[i].circle_rel + frame[i].captured_from.abs_centre;
 			frame[i].circle_dZ = get<2>(circ_info); frame[i].circle_Z = (1 / frame[i].circle_dZ) * frame[i].captured_from.z;
-			frame[i].circle_R = get<3>(circ_info); frame[i].circle_R = get<4>(circ_info);
+			frame[i].circle_R = get<3>(circ_info); frame[i].circle_error = get<4>(circ_info);
 			frame[i].has_circle = true;
+			cout << "Found radius = " << get<3>(circ_info) << " || Previously estimated = " << R;
 		}
 
 		// 5 - DISPLAY COLLAGE
@@ -119,8 +137,6 @@ int main(int argc, char* argv[])
 	}
 
 	display_map(frame, 0.8, focalLength, realR);
-
-	cv::waitKey(0);
 
 	return 0;
 }

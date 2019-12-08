@@ -31,7 +31,7 @@ pair<float, float> normal_distribution(vector<float> values, vector<float> weigh
 	return N;
 }
 
-picture newpic_relpos(picture previous, Mat pic2, int n_kp = 20, int method = 1, bool show_kp = false, bool show_statistics = false) {
+picture newpic_relpos(picture previous, Mat pic2, int n_kp = 20, int method = 1, bool show_kp = false, bool show_matches = false, bool show_statistics = false) {
 
 	method = 1;
 
@@ -157,11 +157,13 @@ picture newpic_relpos(picture previous, Mat pic2, int n_kp = 20, int method = 1,
 
 	//-- Show detected matches
 	//-- Draw only "good" matches
-	Mat img_matches;
-	drawMatches(pic1, keypoints1, pic2, keypoints2,
-		good_matches, img_matches, Scalar::all(-1), Scalar::all(-1),
-		vector<char>(), DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
-	imshow("Good Matches & Object detection", img_matches);
+	if (show_matches) {
+		Mat img_matches;
+		drawMatches(pic1, keypoints1, pic2, keypoints2,
+			good_matches, img_matches, Scalar::all(-1), Scalar::all(-1),
+			vector<char>(), DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
+		imshow("Good Matches & Object detection", img_matches);
+	}
 
 
 	// CALCULATE ROTATION AND POSITION DIFFERENCE
@@ -391,7 +393,7 @@ int display_map(vector<picture> piece, float scale, float focalLength = 1200, fl
 	// DRAW VECTORS AND CIRCLES
 	Mat overlay; float alpha = 0.3; map.copyTo(overlay);
 	if (piece[0].has_circle) {
-		circle(overlay, circleCenter[0], estimate_radius(piece[0].captured_from.z, focalLength, realR), Scalar(0, 0, 100), CV_FILLED, 1);
+		circle(overlay, circleCenter[0], (1/piece[0].captured_from.dz)* piece[0].circle_R, Scalar(0, 0, 100), CV_FILLED, 1);
 		addWeighted(overlay, alpha, map, 1 - alpha, 0, map);
 		circle(map, circleCenter[0], 5, Scalar(0, 200, 0),CV_FILLED, 2, 0);
 	}
@@ -401,7 +403,7 @@ int display_map(vector<picture> piece, float scale, float focalLength = 1200, fl
 	for (int j = 1; j < n; j++) {
 		if (piece[j].has_circle) {
 			map.copyTo(overlay);
-			circle(overlay, circleCenter[j], estimate_radius(piece[j].captured_from.z, focalLength, realR), Scalar(0, 0, 100), CV_FILLED, 1);
+			circle(overlay, circleCenter[j], (1 / piece[0].captured_from.dz) * piece[0].circle_R, Scalar(0, 0, 100), CV_FILLED, 1);
 			addWeighted(overlay, alpha, map, 1 - alpha, 0, map);
 			circle(map, circleCenter[j], 5, Scalar(0, 100, 0), CV_FILLED, 2, 0);
 		}
@@ -417,6 +419,7 @@ int display_map(vector<picture> piece, float scale, float focalLength = 1200, fl
 	resize(map, map, Size(), scale, scale);
 
 	imshow("Full map", map);
+	cvWaitKey();
 
 	return 0;
 }

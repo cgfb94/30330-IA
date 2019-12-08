@@ -12,7 +12,7 @@
 
 #include <time.h>
 
-vector <int>
+vector <float>
 my_RANSAC(cv::Mat img, float r1, float r2);
 
 cv::Mat
@@ -111,7 +111,7 @@ circle_finder(cv::Mat ProcessedImage, float min_rad, float max_rad, int bordersi
 	std::cout << "delta X: " << get<0>(deltas) << "\ndelta Y: " << get<1>(deltas) << "\ndelta Z%: " << get<2>(deltas) << '\n';
 
 	cv::imshow("RANSAC Example", Original);
-	cv::waitKey(0);
+	//cv::waitKey(0);
 
 
 	return deltas;

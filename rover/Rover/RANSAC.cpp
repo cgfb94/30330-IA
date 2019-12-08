@@ -14,20 +14,20 @@
 #include "GRANSAC.hpp"
 #include "CircleModel.hpp"
 
-vector<int> my_RANSAC(cv::Mat img, float r1, float r2)
+vector<float> my_RANSAC(cv::Mat img, float r1, float r2)
 {
-	
-	
+
+
 	std::vector<std::shared_ptr<GRANSAC::AbstractParameter>> CandPoints;
 	int range{ img.cols * img.rows };
 
 	for (int idx = 0; idx < range; ++idx)
 	{
-		if (img.data[idx] > 0) 
+		if (img.data[idx] > 0)
 		{
-			cv::Point Pt{ idx % img.cols, idx / img.cols }; 
+			cv::Point Pt{ idx % img.cols, idx / img.cols };
 			std::shared_ptr<GRANSAC::AbstractParameter> CandPt = std::make_shared<Point2D>(Pt.x, Pt.y);
-						
+
 			CandPoints.push_back(CandPt);
 
 		}
@@ -35,18 +35,22 @@ vector<int> my_RANSAC(cv::Mat img, float r1, float r2)
 
 
 	GRANSAC::RANSAC<Circle2DModel, 3> Estimator;
-	Estimator.Initialize(5, 1000, r1, r2); // Threshold, iterations
+	Estimator.Initialize(2, 1000, r1, r2); // Threshold, iterations
 	int64_t start = cv::getTickCount();
 	Estimator.Estimate(CandPoints);
 	int64_t end = cv::getTickCount();
 	std::cout << "RANSAC took: " << GRANSAC::VPFloat(end - start) / GRANSAC::VPFloat(cv::getTickFrequency()) * 1000.0 << " ms." << std::endl;
-	
-	
+
+
 	cvtColor(img, img, CV_GRAY2BGR);
-	
+
+	float score = 0.0;
+
 	auto BestInliers = Estimator.GetBestInliers();
 	if (BestInliers.size() > 0)
 	{
+		score = (float)BestInliers.size() / (float)CandPoints.size();
+
 		for (auto& Inlier : BestInliers)
 		{
 			auto RPt = std::dynamic_pointer_cast<Point2D>(Inlier);
@@ -55,13 +59,14 @@ vector<int> my_RANSAC(cv::Mat img, float r1, float r2)
 		}
 	}
 
+
 	auto BestLine = Estimator.GetBestModel();
-	if (!BestLine) { return vector<int> {}; }
+	if (!BestLine) { return vector<float> {}; }
 	int x = BestLine->m_x;
-	int y = BestLine->m_y; 
+	int y = BestLine->m_y;
 	int r = BestLine->m_r;
 
-	
+
 
 
 	cv::circle(img, cv::Point(x, y), 5, cv::Scalar(0, 0, 255));
@@ -79,20 +84,20 @@ vector<int> my_RANSAC(cv::Mat img, float r1, float r2)
 		}
 	}
 
-	return vector <int> {x, y, r};
+	return vector <float> {(float)x, (float)y, (float)r, score};
 
-// 	while (true)
-// 	{
-// 		
-// 		cv::imshow("RANSAC Example", img);
-// 		imwrite("RANSAC.jpg", img);
-// 
-// 		char Key = cv::waitKey(1);
-// 		if (Key == 27)
-// 			return 0;
-// 		if (Key == ' ')
-// 			cv::imwrite("LineFitting.png", img);
-// 	}
+	// 	while (true)
+	// 	{
+	// 		
+	// 		cv::imshow("RANSAC Example", img);
+	// 		imwrite("RANSAC.jpg", img);
+	// 
+	// 		char Key = cv::waitKey(1);
+	// 		if (Key == 27)
+	// 			return 0;
+	// 		if (Key == ' ')
+	// 			cv::imwrite("LineFitting.png", img);
+	// 	}
 
-	
+
 }
