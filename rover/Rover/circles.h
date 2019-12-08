@@ -110,9 +110,49 @@ circle_finder(cv::Mat ProcessedImage, float min_rad, float max_rad, int bordersi
 
 	std::cout << "delta X: " << get<0>(deltas) << "\ndelta Y: " << get<1>(deltas) << "\ndelta Z%: " << get<2>(deltas) << '\n';
 
-	cv::imshow("RANSAC Example", Original);
+	cv::imshow("RANSAC result", Original);
 	//cv::waitKey(0);
 
 
 	return deltas;
+}
+
+Mat circle_reduceArea(Mat original, Mat where, float imageSize[2]) {
+		char M = 'M';
+		cout << "\n Do you wish to reduce the search area? (Y/N):   ";
+		cin >> M;
+		if (M == 'Y' || M == 'y') {
+			while (1) {
+				Point2f p1, p2;
+				cout << "\n [ Image distribution ]\n  (x=0,y=0)% --------------(x=100,y=0)%\n       |\n       |\n       |\n (x=0,y=100)%\n";
+				cout << "\n -- Imput first corner (in %):\n    x = ";
+				cin >> p1.x;
+				cout << "    y = ";
+				cin >> p1.y;
+				cout << "\n -- Imput second corner (in %):\n    x = ";
+				cin >> p2.x;
+				cout << "    y = ";
+				cin >> p2.y;
+				if (p1.x > 100 || p1.y > 100 || p1.x < 0 || p1.y < 0 || p2.x>100 || p2.y > 100 || p2.x < 0 || p2.y < 0) {
+					cout << "\n   <Wrong parameter input> Proceeding without it";
+					break;
+				}
+				p1.x = (p1.x / 100) * imageSize[1]; p1.y = (p1.y / 100) * imageSize[0];
+				p2.x = (p2.x / 100) * imageSize[1]; p2.y = (p2.y / 100) * imageSize[0];
+				Mat mask(where.size(), CV_8U, Scalar(0, 0, 0));
+				where = Mat(where.size(), where.type(), Scalar(120, 120, 120));
+				rectangle(mask, Rect(p1, p2), Scalar(255), CV_FILLED);
+				original.copyTo(where, mask);
+				imshow("Search area", where);
+				cv::waitKey(1);
+				cout << "\n --> Accept search area? (Y/N) :";
+				cin >> M;
+				if (M == 'Y' || M == 'y') {
+					cvDestroyWindow("Search area");
+					break;
+				}
+			}
+		}
+		if (getWindowProperty("RANSAC result", 0) >= 0) cvDestroyWindow("RANSAC result");
+		return where;
 }
