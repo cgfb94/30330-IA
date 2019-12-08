@@ -332,6 +332,7 @@ public:
 	bool has_circle = false;
 	Point2f circle_rel; float circle_dZ;
 	Point2f circle_abs; float circle_Z;
+	float circle_R; float circle_error;
 
 	picture() {};
 

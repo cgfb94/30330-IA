@@ -12,7 +12,6 @@
     <ClCompile Include="regions_islands.cpp" />
     <ClCompile Include="threshold_exe.cpp" />
     <ClCompile Include="terrain.cpp" />
-    <ClCompile Include="terrain2.cpp" />
     <ClCompile Include="utils.cpp" />
     <ClCompile Include="webcam_capture.cpp" />
   </ItemGroup>
@@ -23,6 +22,7 @@
     <ClInclude Include="mars.h" />
     <ClInclude Include="rover.h" />
     <ClInclude Include="compass.h" />
+    <ClInclude Include="circles.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Images\mars4.jpeg" />

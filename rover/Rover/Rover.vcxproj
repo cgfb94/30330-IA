@@ -131,13 +131,13 @@
     <ClCompile Include="regions_islands.cpp" />
     <ClCompile Include="threshold_exe.cpp" />
     <ClCompile Include="terrain.cpp" />
-    <ClCompile Include="terrain2.cpp" />
     <ClCompile Include="utils.cpp" />
     <ClCompile Include="webcam_capture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractModel.hpp" />
     <ClInclude Include="CircleModel.hpp" />
+    <ClInclude Include="circles.h" />
     <ClInclude Include="GRANSAC.hpp" />
     <ClInclude Include="mars.h" />
     <ClInclude Include="compass.h" />
