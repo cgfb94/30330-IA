@@ -132,11 +132,10 @@ int main(int argc, char* argv[])
 			frame[i].has_circle = true;
 			cout << "Found radius = " << get<3>(circ_info) << " || Previously estimated = " << R;
 		}
-
-		// 5 - DISPLAY COLLAGE
-		cout << "\n\n DRAWING AREA MAP:";
 	}
 
+	// 5 - DISPLAY COLLAGE
+	cout << "\n\n DRAWING AREA MAP:";
 	display_map(frame, 0.8, focalLength, realR);
 
 	return 0;
