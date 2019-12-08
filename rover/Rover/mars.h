@@ -329,6 +329,7 @@ public:
 	vector<Point> locations;
 	location captured_from;
 	//int spots[2][100];
+	bool has_circle = false;
 	Point2f circle_rel; float circle_dZ;
 	Point2f circle_abs; float circle_Z;
 

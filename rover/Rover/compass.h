@@ -31,7 +31,7 @@ pair<float, float> normal_distribution(vector<float> values, vector<float> weigh
 	return N;
 }
 
-picture newpic_relpos(picture previous, Mat pic2, int n_kp = 20, int method = 1) {
+picture newpic_relpos(picture previous, Mat pic2, int n_kp = 20, int method = 1, bool show_kp = false, bool show_statistics = false) {
 
 	method = 1;
 
@@ -99,9 +99,9 @@ picture newpic_relpos(picture previous, Mat pic2, int n_kp = 20, int method = 1)
 		if (dist > max_dist) max_dist = dist;
 	}
 
-	printf("\nRelative position computation:");
-	printf("\n-- Max dist : %f", max_dist);
-	printf("\n-- Min dist : %f", min_dist);
+	//printf("\nRelative position computation:");
+	//printf("\n-- Max dist : %f", max_dist);
+	//printf("\n-- Min dist : %f", min_dist);
 
 	std::vector< DMatch > good_matches;
 	float filter0 = 0, filter = 1.005; int counter = 0;
@@ -126,13 +126,13 @@ picture newpic_relpos(picture previous, Mat pic2, int n_kp = 20, int method = 1)
 	for (int i = 0; i < good_matches.size(); i++)
 	{
 		//-- Get the keypoints from the good matches
-		printf("\n-- Good Match [%d] Keypoint 1: %d  -- Keypoint 2: %d :  distance --> %f ", i, good_matches[i].queryIdx, good_matches[i].trainIdx, good_matches[i].distance);
+		if(show_kp) printf("\n-- Good Match [%d] Keypoint 1: %d  -- Keypoint 2: %d :  distance --> %f ", i, good_matches[i].queryIdx, good_matches[i].trainIdx, good_matches[i].distance);
 		goodKP1.push_back(keypoints1[good_matches[i].queryIdx].pt);
 		goodKP2.push_back(keypoints2[good_matches[i].trainIdx].pt);
 	}
 
 	//Homography stuff :(
-	Mat H = findHomography(goodKP2, goodKP1, CV_RANSAC);
+	//Mat H = findHomography(goodKP2, goodKP1, CV_RANSAC);
 	/*
 	//Mat H = getPerspectiveTransform(goodKP2, goodKP1);
 
@@ -173,7 +173,6 @@ picture newpic_relpos(picture previous, Mat pic2, int n_kp = 20, int method = 1)
 	KPstat AZ("AZ"), Aangle("Aangle"), AX("AX"), AY("AY");
 
 	// Loop to verify zoom and rotation given by different keypoint couples:------------
-	bool show1 = true, show2 = true;
 	float numerator = 100;
 
 	// 1 - Calculate rotations and zoom:
@@ -190,7 +189,7 @@ picture newpic_relpos(picture previous, Mat pic2, int n_kp = 20, int method = 1)
 	Aangle.weight = AZ.weight;
 
 	// 2 - Fit into normal distribution
-	AZ.initial_normal_distribution(show1); Aangle.initial_normal_distribution(show1);
+	AZ.initial_normal_distribution(show_statistics); Aangle.initial_normal_distribution(show_statistics);
 
 	bool zOK = false; bool AngleOK = false;
 	for (int i = 0; i < 5*n_kp; i++) {
@@ -200,7 +199,7 @@ picture newpic_relpos(picture previous, Mat pic2, int n_kp = 20, int method = 1)
 		// 4 - Rely on common results
 		AZ = Aangle.useCommonInfo(AZ);
 		// 5 - repeat until outlier percentage is lower than %
-		AZ.normal_distribution(show1); Aangle.normal_distribution(show1);
+		AZ.normal_distribution(show_statistics); Aangle.normal_distribution(show_statistics);
 		//cout << "<< { ";
 		//for (int j = 0; j < AZ.N.size(); j++) {
 		//	cout << AZ.N[j] / n_kp << ", ";
@@ -209,7 +208,7 @@ picture newpic_relpos(picture previous, Mat pic2, int n_kp = 20, int method = 1)
 
 		//Stop if accuracy is OK.
 		if (zOK || AngleOK) {
-			cout << "\n >>>>>>>>>> OK!";
+			if (show_statistics) cout << "\n >>>>>>>>>> OK!";
 			break;
 		}
 	}
@@ -264,7 +263,7 @@ picture newpic_relpos(picture previous, Mat pic2, int n_kp = 20, int method = 1)
 	AY.weight = AX.weight;
 
 	// 2 - Fit into normal distribution
-	AX.initial_normal_distribution(show2); AY.initial_normal_distribution(show2);
+	AX.initial_normal_distribution(show_statistics); AY.initial_normal_distribution(show_statistics);
 	bool xOK = false; bool yOK = false;
 	for (int i = 0; i < n_kp; i++) {
 		// 3 - Order points by distance to mean --> eliminate furthest
@@ -273,7 +272,7 @@ picture newpic_relpos(picture previous, Mat pic2, int n_kp = 20, int method = 1)
 		// 4 - Rely on common results
 		AY = AX.useCommonInfo(AY);
 		// 5 - repeat until outlier percentage is lower than %
-		AX.normal_distribution(show2); AY.normal_distribution(show2);
+		AX.normal_distribution(show_statistics); AY.normal_distribution(show_statistics);
 		//cout << "<< { ";
 		//for (int j = 0; j < AX.N.size(); j++) {
 		//	cout << AX.N[j] << ", ";
@@ -282,7 +281,7 @@ picture newpic_relpos(picture previous, Mat pic2, int n_kp = 20, int method = 1)
 
 		//Stop if accuracy is OK.
 		if (xOK || yOK) {
-			cout << "\n >>>>>>>>>> OK!";
+			if (show_statistics) cout << "\n >>>>>>>>>> OK!";
 			break;
 		}
 	}
@@ -309,7 +308,7 @@ picture newpic_relpos(picture previous, Mat pic2, int n_kp = 20, int method = 1)
 	pos.z = (1 / pos.dz) * previous.captured_from.z;
 	pos.angle = pos.d_angle + previous.captured_from.angle;
 	pos.abs_centre = pos.traslation + previous.captured_from.abs_centre;
-	pos.rel_homography = H;
+	//pos.rel_homography = H;
 	pos.error = pos.error + previous.captured_from.error;
 
 	// Return:
@@ -317,7 +316,7 @@ picture newpic_relpos(picture previous, Mat pic2, int n_kp = 20, int method = 1)
 	return newpic;
 }
 
-int display_map(vector<picture> piece, float scale) {
+int display_map(vector<picture> piece, float scale, float focalLength = 1200, float realR = 5) {
 
 	int n = piece.size();
 	vector<vector<Point2f>> abs_points(n, vector<Point2f>(5));
@@ -337,6 +336,8 @@ int display_map(vector<picture> piece, float scale) {
 	//Mat map_see = cv::Mat::zeros(map.size(), CV_8U);
 
 	Point2f centre_aux = centre;
+	vector<Point2f> circleCenter(n);
+	circleCenter[0] = centre_aux - piece[0].circle_abs;
 
 	// DRAW IMAGES
 	for (int j = 0; j < n; j++) {
@@ -347,6 +348,7 @@ int display_map(vector<picture> piece, float scale) {
 
 		centre_aux = centre - piece[j].captured_from.abs_centre;
 		piece[j].captured_from.map_centre = centre_aux;
+		circleCenter[j] = centre_aux - piece[j].circle_abs;
 
 		float scale = piece[j].captured_from.z / piece[0].captured_from.z;
 
@@ -383,12 +385,31 @@ int display_map(vector<picture> piece, float scale) {
 		//line(map, abs_points[j][3], abs_points[j][4], 255, 1); line(map, abs_points[j][4], abs_points[j][1], 255, 1);
 		circle(map, centre_aux, 5, Scalar(255), 2);
 	}
+	
+	int c = 15; float tx = 0.5; float font = .6;
 
-	// DRAW VECTORS
+	// DRAW VECTORS AND CIRCLES
+	Mat overlay; float alpha = 0.3; map.copyTo(overlay);
+	if (piece[0].has_circle) {
+		circle(overlay, circleCenter[0], estimate_radius(piece[0].captured_from.z, focalLength, realR), Scalar(0, 0, 100), CV_FILLED, 1);
+		addWeighted(overlay, alpha, map, 1 - alpha, 0, map);
+		circle(map, circleCenter[0], 5, Scalar(0, 200, 0),CV_FILLED, 2, 0);
+	}
+	circle(map, piece[0].captured_from.map_centre, c, Scalar(255, 255, 255), CV_FILLED, 2, 0);
+	circle(map, piece[0].captured_from.map_centre, c, Scalar(0, 0, 0), 1, 0);
+	putText(map, to_string(0), piece[0].captured_from.map_centre + Point2f(-c*tx, c*tx), FONT_HERSHEY_COMPLEX, font, 0, 2);
 	for (int j = 1; j < n; j++) {
-		arrowedLine(map, piece[j - 1].captured_from.map_centre, piece[j].captured_from.map_centre, Scalar(255), 2);
-		putText(map, "-(" + to_string(j) + ")", piece[j].captured_from.map_centre, FONT_HERSHEY_COMPLEX_SMALL, 1.5, 255, 2);
-		putText(map, " " + to_string((int)piece[j].captured_from.step_distance) + " pixels", Point2f((piece[j - 1].captured_from.map_centre.x + piece[j].captured_from.map_centre.x) / 2, (piece[j - 1].captured_from.map_centre.y + piece[j].captured_from.map_centre.y) / 2), FONT_HERSHEY_COMPLEX_SMALL, 1.1, 255, 2);
+		if (piece[j].has_circle) {
+			map.copyTo(overlay);
+			circle(overlay, circleCenter[j], estimate_radius(piece[j].captured_from.z, focalLength, realR), Scalar(0, 0, 100), CV_FILLED, 1);
+			addWeighted(overlay, alpha, map, 1 - alpha, 0, map);
+			circle(map, circleCenter[j], 5, Scalar(0, 100, 0), CV_FILLED, 2, 0);
+		}
+		line(map, piece[j - 1].captured_from.map_centre, piece[j].captured_from.map_centre, Scalar(210, 197, 186), 2);
+		circle(map, piece[j].captured_from.map_centre, c, Scalar(255, 255, 255), CV_FILLED, 2, 0);
+		circle(map, piece[j].captured_from.map_centre, c, Scalar(0, 0, 0), 1, 0);
+		putText(map, to_string(j), piece[j].captured_from.map_centre + Point2f(-c*tx,c*tx), FONT_HERSHEY_COMPLEX, font, 0, 2);
+		//putText(map, " " + to_string((int)piece[j].captured_from.step_distance) + " pixels", Point2f((piece[j - 1].captured_from.map_centre.x + piece[j].captured_from.map_centre.x) / 2, (piece[j - 1].captured_from.map_centre.y + piece[j].captured_from.map_centre.y) / 2), FONT_HERSHEY_COMPLEX_SMALL, 1.1, 255, 2);
 		cout << "\n\nFrame " << j << " --> Drawn.";
 	}
 
