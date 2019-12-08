@@ -6,6 +6,7 @@
 
 #include "mars.h"
 #include "rover.h"
+#include "compass.h"
 
 #include <random>
 #include <tuple>
@@ -129,6 +130,7 @@ int main(int argc, char* argv[])
 // by too much and then continue search on other half of the contour
 // use the new list of contours to detect circles
 {
+<<<<<<< HEAD
 	std::string name = utils::getAbsImagePath("Images//678//66-s678-x6.y1-0.211m-L1-R0.jpg");
 
 	cv::Mat Image = cv::imread(name.c_str(), 1);
@@ -146,7 +148,7 @@ int main(int argc, char* argv[])
 
 	//vector<Mat> pics = { imread(imPath0.c_str(), 1), imread(imPath1.c_str(), 1), imread(imPath2.c_str(), 1), imread(imPath3.c_str(), 1), imread(imPath4.c_str(), 1) };
 
-	//int x = test3(pics);
+	return 0;
 }
 
 

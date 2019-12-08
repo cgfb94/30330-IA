@@ -140,6 +140,7 @@
     <ClInclude Include="CircleModel.hpp" />
     <ClInclude Include="GRANSAC.hpp" />
     <ClInclude Include="mars.h" />
+    <ClInclude Include="compass.h" />
     <ClInclude Include="rover.h" />
   </ItemGroup>
   <ItemGroup>
