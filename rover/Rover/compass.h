@@ -31,7 +31,7 @@ pair<float, float> normal_distribution(vector<float> values, vector<float> weigh
 	return N;
 }
 
-picture newpic_relpos(picture previous, Mat pic2, int n_kp = 20, int method = 1, bool show_kp = false, bool show_matches = false, bool show_statistics = false) {
+picture newpic_relpos(picture previous, Mat pic2, int n_kp = 60, int method = 1, bool show_kp = false, bool show_matches = false, bool show_statistics = false) {
 
 	method = 1;
 
@@ -114,7 +114,7 @@ picture newpic_relpos(picture previous, Mat pic2, int n_kp = 20, int method = 1,
 				good_matches.push_back(matches[i]);
 			}
 		}
-		counter++; if (counter > 400) break;
+		counter++; if (counter > 10000) break;
 		filter0 = filter;
 		filter = filter + 0.005;
 	}
@@ -163,6 +163,7 @@ picture newpic_relpos(picture previous, Mat pic2, int n_kp = 20, int method = 1,
 			good_matches, img_matches, Scalar::all(-1), Scalar::all(-1),
 			vector<char>(), DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
 		imshow("Good Matches & Object detection", img_matches);
+		cvWaitKey();
 	}
 
 
@@ -228,9 +229,9 @@ picture newpic_relpos(picture previous, Mat pic2, int n_kp = 20, int method = 1,
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-	// Zoom and rotate second image to match second one's characteristics
+	// Zoom and rotate first image to match second one's characteristics
 	Point2f centre((float)pic1.cols / 2, (float)pic1.rows / 2);
-	Mat rot = cv::getRotationMatrix2D(centre, pos.d_angle, pos.z);
+	Mat rot = cv::getRotationMatrix2D(centre, pos.d_angle, pos.dz);
 	Mat aux; vector<Point2f> aux2(goodKP2.size());
 	warpAffine(pic1, aux, rot, pic1.size());
 	for (int k = 0; k < goodKP1.size(); k++) {
@@ -242,7 +243,7 @@ picture newpic_relpos(picture previous, Mat pic2, int n_kp = 20, int method = 1,
 
 	// Loop to verify translation given by different keypoint couples:------------
 	//float sfx = 0.81; float sfy = 0.7;
-	float sfx = 1; float sfy = 1;
+	float sfx = 1/pos.dz; float sfy = 1/pos.dz;
 
 	// 1 - Calculate translations:
 	bool getpreviousinfo = false;
@@ -291,7 +292,7 @@ picture newpic_relpos(picture previous, Mat pic2, int n_kp = 20, int method = 1,
 
 	// endloop----------------------------------------------------------------
 
-	pos.traslation.x = AX.avg;
+	pos.traslation.x = -AX.avg;
 	pos.traslation.y = AY.avg;
 	pos.error = max(pos.error, AX.sd); pos.error = max(pos.error, AY.sd); pos.error = pos.error + previous.captured_from.error;
 	pos.step_distance = euclideanDist(Point2f(0, 0), pos.traslation);
@@ -309,7 +310,7 @@ picture newpic_relpos(picture previous, Mat pic2, int n_kp = 20, int method = 1,
 
 	pos.z = (1 / pos.dz) * previous.captured_from.z;
 	pos.angle = pos.d_angle + previous.captured_from.angle;
-	pos.abs_centre = pos.traslation + previous.captured_from.abs_centre;
+	pos.abs_centre = (pos.traslation + previous.captured_from.abs_centre);
 	//pos.rel_homography = H;
 	pos.error = pos.error + previous.captured_from.error;
 
@@ -339,7 +340,8 @@ int display_map(vector<picture> piece, float scale, float focalLength = 1200, fl
 
 	Point2f centre_aux = centre;
 	vector<Point2f> circleCenter(n);
-	circleCenter[0] = centre_aux - piece[0].circle_abs;
+	circleCenter[0].x = centre.x + piece[0].circle_abs.x;
+	circleCenter[0].y = centre.y - piece[0].circle_abs.y;
 
 	// DRAW IMAGES
 	for (int j = 0; j < n; j++) {
@@ -348,11 +350,13 @@ int display_map(vector<picture> piece, float scale, float focalLength = 1200, fl
 		Mat rot_aux = cv::Mat::zeros(g.size(), g.type());
 		Mat map_mask = cv::Mat::zeros(map.size(), CV_8U);
 
-		centre_aux = centre - piece[j].captured_from.abs_centre;
-		piece[j].captured_from.map_centre = centre_aux;
-		circleCenter[j] = centre_aux - piece[j].circle_abs;
-
 		float scale = piece[j].captured_from.z / piece[0].captured_from.z;
+		centre_aux.x = centre.x + piece[j].captured_from.abs_centre.x;
+		centre_aux.y = centre.y - piece[j].captured_from.abs_centre.y;
+		piece[j].captured_from.map_centre = centre_aux;
+
+		circleCenter[j].x = centre.x + piece[j].circle_abs.x;
+		circleCenter[j].y = centre.y - piece[j].circle_abs.y;
 
 		//Rotation and zoom
 		Mat H = getRotationMatrix2D(Point2f(g.cols / 2, g.rows / 2), -piece[j].captured_from.angle, scale);
@@ -391,11 +395,12 @@ int display_map(vector<picture> piece, float scale, float focalLength = 1200, fl
 	int c = 15; float tx = 0.5; float font = .6;
 
 	// DRAW VECTORS AND CIRCLES
-	Mat overlay; float alpha = 0.3; map.copyTo(overlay);
+	Mat overlay; map.copyTo(overlay);
 	if (piece[0].has_circle) {
-		circle(overlay, circleCenter[0], (1/piece[0].captured_from.dz)* piece[0].circle_R, Scalar(0, 0, 100), CV_FILLED, 1);
-		addWeighted(overlay, alpha, map, 1 - alpha, 0, map);
+		circle(overlay, circleCenter[0], piece[0].circle_R, piece[0].c_color, CV_FILLED, 1);
+		addWeighted(overlay, piece[0].c_alpha, map, 1 - piece[0].c_alpha, 0, map);
 		circle(map, circleCenter[0], 5, Scalar(0, 200, 0),CV_FILLED, 2, 0);
+		putText(map, "0", circleCenter[0], FONT_HERSHEY_COMPLEX, font, 0, 1);
 	}
 	circle(map, piece[0].captured_from.map_centre, c, Scalar(255, 255, 255), CV_FILLED, 2, 0);
 	circle(map, piece[0].captured_from.map_centre, c, Scalar(0, 0, 0), 1, 0);
@@ -403,9 +408,10 @@ int display_map(vector<picture> piece, float scale, float focalLength = 1200, fl
 	for (int j = 1; j < n; j++) {
 		if (piece[j].has_circle) {
 			map.copyTo(overlay);
-			circle(overlay, circleCenter[j], (1 / piece[0].captured_from.dz) * piece[0].circle_R, Scalar(0, 0, 100), CV_FILLED, 1);
-			addWeighted(overlay, alpha, map, 1 - alpha, 0, map);
-			circle(map, circleCenter[j], 5, Scalar(0, 100, 0), CV_FILLED, 2, 0);
+			circle(overlay, circleCenter[j], (piece[j].captured_from.z / piece[0].captured_from.z) * piece[j].circle_R, piece[j].c_color, CV_FILLED, 1);
+			addWeighted(overlay, piece[j].c_alpha, map, 1 - piece[j].c_alpha, 0, map);
+			circle(map, circleCenter[j], 5, Scalar(100, 100, 0), CV_FILLED, 2, 0);
+			putText(map, to_string(j), circleCenter[j], FONT_HERSHEY_COMPLEX, font, 0, 1);
 		}
 		line(map, piece[j - 1].captured_from.map_centre, piece[j].captured_from.map_centre, Scalar(210, 197, 186), 2);
 		circle(map, piece[j].captured_from.map_centre, c, Scalar(255, 255, 255), CV_FILLED, 2, 0);
@@ -422,4 +428,59 @@ int display_map(vector<picture> piece, float scale, float focalLength = 1200, fl
 	cvWaitKey();
 
 	return 0;
+}
+
+picture SensorFusion(picture a1, picture a2) {
+
+	cout << "\n\n >>   [Recalibrating current position] --> Merging sensor results: ";
+	// Adjustable parameters: ---------------
+	
+	float admit_factor = 0.5; // <---- Factor scaled by the circle radius to classify circles as same or different.
+
+	float Te[2] = {0, 30} ;   // <---- Terrain algorithm error scaling
+	//float Ce[2] = { 0.09, 0.06 };  // <---- Circle algorithm error scaling
+	float Re = 20;            // <---- Radius error scaling
+
+	//---------------------------------------
+
+	// Inputs
+	float R1 = a1.circle_R;
+	float R2_p = (1 / a2.captured_from.dz) * a2.circle_R;
+	Point2f y1 = a1.circle_abs;
+	Point2f y2_p = a2.circle_abs;
+	float e2C = a2.circle_error;
+	float e2T = a2.captured_from.error;
+	float e2R = abs(R1 - R2_p);
+
+	cout << "\n   -- New circle at ~ x = " << y2_p.x << ", y = " << y2_p.y << "   |   Original was at x = " << y1.x << ", y = " << y1.y;
+
+	// Error calculation
+	Point2f e = y2_p - y1;
+	float e_modulus = euclideanDist(Point(0, 0), e);
+
+	if (e_modulus > admit_factor* R1 || e2R > Re) {
+		cout << "\n   << -- WARNING: The new found circle is a different one. Impossible to recalibrate... >> \n       Proceeding with previous results.";
+		a2.c_color = Scalar(0, 0, 100);
+		a2.c_alpha = 0.25;
+		return a2;
+	}
+
+	float Rt = max((float)0.001, min((float)1, ((1 / (Te[1] - Te[0])) * (e2T - Te[0]))));
+	float Ct = max((float)0.001, min((float)1,  (e2R/Re)));							// ((1 / (Ce[1] - Ce[0])) * (e2C - Ce[0]))
+	float L = max((float)0, min((float)1, Rt / Ct));
+	Point2f y2 = y2_p - L * e;
+	float R2 = R2_p - L * (R2_p - R1);
+
+	// Update variables in image;
+	a2.circle_abs = y2;
+	a2.captured_from.abs_centre = a2.captured_from.abs_centre - L * e;
+	a2.captured_from.error = (1 - L) * e_modulus*(1+Ct);
+	a2.captured_from.dz = (R2/R2_p) * a2.captured_from.dz;
+	a2.captured_from.z = (R2_p / R2) * a2.captured_from.z;
+	a2.c_color = Scalar(0, 100, 0);
+	a2.c_alpha = 0.3;
+
+	cout << "\n      ( errT = " << Rt << ",  errC = " << Ct << "  --> L = " << L << " )";
+	cout << "\n   -- Position corrected by dx = " << L * e.x << " and dy = " << L * e.y << "  --> New error = " << a2.captured_from.error;
+	return a2;
 }

@@ -151,8 +151,8 @@ Mat circle_reduceArea(Mat original, Mat where, float imageSize[2]) {
 					cvDestroyWindow("Search area");
 					break;
 				}
+				cvDestroyWindow("Search area");
 			}
 		}
-		if (getWindowProperty("RANSAC result", 0) >= 0) cvDestroyWindow("RANSAC result");
 		return where;
 }
