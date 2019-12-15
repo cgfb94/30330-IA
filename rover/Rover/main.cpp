@@ -26,8 +26,8 @@ int main(int argc, char* argv[])
 
 	int n_kp = 80;
 
-	bool search_for_circle = true;
-	float cir_err = 3;
+	bool search_for_circle = false;
+	float cir_err = 1;
 	float prev_err = 15; float prev_tol = 8;
 
 	vector<string> imPath = {

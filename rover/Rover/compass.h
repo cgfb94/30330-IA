@@ -458,7 +458,7 @@ picture SensorFusion(picture a1, picture a2) {
 	Point2f e = y2_p - y1;
 	float e_modulus = euclideanDist(Point(0, 0), e);
 
-	if (e_modulus > admit_factor* R1 || e2R > Re) {
+	if (e_modulus > admit_factor* R1) {
 		cout << "\n   << -- WARNING: The new found circle is a different one. Impossible to recalibrate... >> \n       Proceeding with previous results.";
 		a2.c_color = Scalar(0, 0, 100);
 		a2.c_alpha = 0.25;
