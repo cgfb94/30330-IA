@@ -24,10 +24,10 @@ int main(int argc, char* argv[])
 {
 	//IplImage* Image = webcam_capture();
 
-	int n_kp = 80;
+	int n_kp = 40;
 
 	bool search_for_circle = false;
-	float cir_err = 1;
+	float cir_err = 3;
 	float prev_err = 15; float prev_tol = 8;
 
 	vector<string> imPath = {
@@ -37,9 +37,17 @@ int main(int argc, char* argv[])
 		utils::getAbsImagePath("Images\\678B\\4.jpg"),
 		utils::getAbsImagePath("Images\\678B\\5.jpg"),
 		utils::getAbsImagePath("Images\\678B\\6.jpg"),
-		utils::getAbsImagePath("Images\\678B\\7.jpg"),
-		//utils::getAbsImagePath("Images\\678B\\8.jpg"),
-		//utils::getAbsImagePath("Images\\678B\\9.jpg")
+		utils::getAbsImagePath("Images\\678B\\7.jpg")
+
+		//utils::getAbsImagePath("Images\\GB\\2.jpg"),
+		//utils::getAbsImagePath("Images\\GB\\1.jpg"),
+		//utils::getAbsImagePath("Images\\GB\\9.jpg"),
+		//utils::getAbsImagePath("Images\\GB\\3.jpg"), // <----
+		//utils::getAbsImagePath("Images\\GB\\4.jpg"), // <----
+		//utils::getAbsImagePath("Images\\GB\\5.jpg"),
+		//utils::getAbsImagePath("Images\\GB\\6.jpg"),
+		//utils::getAbsImagePath("Images\\GB\\8.jpg"),
+		//utils::getAbsImagePath("Images\\GB\\7.jpg")
 	};
 	int dataSize = imPath.size();
 
@@ -103,7 +111,7 @@ int main(int argc, char* argv[])
 		// 3 - Run terrain recognition to see how we moved
 		cout << "\n\n\nFRAME " << i;
 		cout << "\n\n >>   Terrain recognition:\n";
-		frame.push_back(newpic_relpos(frame[0], Image_360x640, 30));
+		frame.push_back(newpic_relpos(frame[0], Image_360x640, n_kp));
 		cout << "\nFrame (" << i << ") moved " << frame[i].captured_from.step_distance << "units -->  dX = " << frame[i].captured_from.traslation.x << ", dY = " << frame[i].captured_from.traslation.y << ", dZ = " << frame[i].captured_from.dz << "; dAngle =  " << frame[i].captured_from.d_angle;
 		cout << "\n                                   X = " << frame[i].captured_from.abs_centre.x << ",  Y = " << frame[i].captured_from.abs_centre.y << ",  Z = " << frame[i].captured_from.z << "; Angle =  " << frame[i].captured_from.angle << ",  >> ERROR << = " << frame[i].captured_from.error;
 
@@ -111,7 +119,7 @@ int main(int argc, char* argv[])
 		if (frame[i].captured_from.error > prev_err) {
 			int best_previous = i - 1;
 			picture aux = frame[i];
-			for (int j = i - 1; j >= 0; j--) {
+			for (int j = i - 1; j > 0; j--) {
 				aux = newpic_relpos(frame[j], frame[i].original, n_kp);
 				if (aux.captured_from.error < frame[i].captured_from.error || aux.captured_from.error < 15) {
 					frame[i] = aux;

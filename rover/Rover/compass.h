@@ -218,7 +218,7 @@ picture newpic_relpos(picture previous, Mat pic2, int n_kp = 60, int method = 1,
 	// endloop---------------------------------------------------------------------------
 
 	pos.dz = AZ.avg;
-	pos.d_angle = Aangle.avg;
+	pos.d_angle = Aangle.avg * 180 / 3.1415; 
 	pos.error = max(Aangle.sd, AZ.sd);
 
 	// old %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -292,8 +292,8 @@ picture newpic_relpos(picture previous, Mat pic2, int n_kp = 60, int method = 1,
 
 	// endloop----------------------------------------------------------------
 
-	pos.traslation.x = -AX.avg;
-	pos.traslation.y = AY.avg;
+	pos.traslation.x = (-AX.avg * cos(Aangle.avg) + AY.avg * sin(Aangle.avg));
+	pos.traslation.y = -(-AX.avg * sin(Aangle.avg) - AY.avg * cos(Aangle.avg));
 	pos.error = max(pos.error, AX.sd); pos.error = max(pos.error, AY.sd); pos.error = pos.error + previous.captured_from.error;
 	pos.step_distance = euclideanDist(Point2f(0, 0), pos.traslation);
 
@@ -361,8 +361,8 @@ int display_map(vector<picture> piece, float scale, float focalLength = 1200, fl
 		//Rotation and zoom
 		Mat H = getRotationMatrix2D(Point2f(g.cols / 2, g.rows / 2), -piece[j].captured_from.angle, scale);
 		//Translation
-		H.at<double>(0, 2) = centre_aux.x - g.cols * scale / 2;
-		H.at<double>(1, 2) = centre_aux.y - g.rows * scale / 2;
+		H.at<double>(0, 2) = centre_aux.x + (-g.cols * cos(-piece[j].captured_from.angle * 3.1415 / 180) - g.rows * sin(-piece[j].captured_from.angle * 3.1415 / 180)) * scale / 2;
+		H.at<double>(1, 2) = centre_aux.y + (-g.cols * sin(+piece[j].captured_from.angle * 3.1415 / 180) - g.rows * cos(-piece[j].captured_from.angle * 3.1415 / 180)) * scale / 2;
 		warpAffine(g, rot_aux, H, map.size());
 		warpAffine(g_mask, map_mask, H, map.size());
 
