@@ -77,7 +77,6 @@ preprocess_main(cv::Mat image, float dx = 1.0) {
 tuple <float, float, float, float, float>
 circle_finder(cv::Mat ProcessedImage, float min_rad, float max_rad, int bordersize, cv::Mat Original = cv::Mat())
 {
-
 	vector<float> results = my_RANSAC(ProcessedImage, min_rad, max_rad);
 	cv::Point center = cv::Point(floor(ProcessedImage.cols / 2), floor(ProcessedImage.rows / 2));
 

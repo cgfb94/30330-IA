@@ -24,30 +24,31 @@ int main(int argc, char* argv[])
 {
 	//IplImage* Image = webcam_capture();
 
-	int n_kp = 40;
+	int n_kp = 30; //40
 
 	bool search_for_circle = false;
-	float cir_err = 3;
+	float cir_err = 1;
 	float prev_err = 15; float prev_tol = 8;
 
+	float initial_dist = 194; // 250 194; //mm
 	vector<string> imPath = {
-		utils::getAbsImagePath("Images\\678B\\1.jpg"),
-		utils::getAbsImagePath("Images\\678B\\2.jpg"),
-		utils::getAbsImagePath("Images\\678B\\3.jpg"),
-		utils::getAbsImagePath("Images\\678B\\4.jpg"),
-		utils::getAbsImagePath("Images\\678B\\5.jpg"),
-		utils::getAbsImagePath("Images\\678B\\6.jpg"),
-		utils::getAbsImagePath("Images\\678B\\7.jpg")
+		//utils::getAbsImagePath("Images\\678B\\1.jpg"),
+		//utils::getAbsImagePath("Images\\678B\\2.jpg"),
+		//utils::getAbsImagePath("Images\\678B\\3.jpg"),
+		//utils::getAbsImagePath("Images\\678B\\4.jpg"),
+		//utils::getAbsImagePath("Images\\678B\\5.jpg"),
+		//utils::getAbsImagePath("Images\\678B\\6.jpg"),
+		//utils::getAbsImagePath("Images\\678B\\7.jpg")
 
-		//utils::getAbsImagePath("Images\\GB\\2.jpg"),
-		//utils::getAbsImagePath("Images\\GB\\1.jpg"),
-		//utils::getAbsImagePath("Images\\GB\\9.jpg"),
-		//utils::getAbsImagePath("Images\\GB\\3.jpg"), // <----
-		//utils::getAbsImagePath("Images\\GB\\4.jpg"), // <----
-		//utils::getAbsImagePath("Images\\GB\\5.jpg"),
-		//utils::getAbsImagePath("Images\\GB\\6.jpg"),
-		//utils::getAbsImagePath("Images\\GB\\8.jpg"),
-		//utils::getAbsImagePath("Images\\GB\\7.jpg")
+		utils::getAbsImagePath("Images\\GB\\2.jpg"),
+		utils::getAbsImagePath("Images\\GB\\1.jpg"),
+		utils::getAbsImagePath("Images\\GB\\9.jpg"),
+		utils::getAbsImagePath("Images\\GB\\3.jpg"),
+		utils::getAbsImagePath("Images\\GB\\4.jpg")
+		utils::getAbsImagePath("Images\\GB\\5.jpg"),
+		utils::getAbsImagePath("Images\\GB\\6.jpg"),
+		utils::getAbsImagePath("Images\\GB\\8.jpg"),
+		utils::getAbsImagePath("Images\\GB\\7.jpg")
 	};
 	int dataSize = imPath.size();
 
@@ -61,7 +62,7 @@ int main(int argc, char* argv[])
 	cv::resize(Image, Image_360x640, Image_360x640.size());
 	frame[0].original = Image_360x640;
 	frame[0].captured_from.error = 0;
-	frame[0].captured_from.z = 250; //mm
+	frame[0].captured_from.z = initial_dist;
 	frame[0].captured_from.dz = 1;
 
 	float focalLength = 1150; //pixels
@@ -117,6 +118,7 @@ int main(int argc, char* argv[])
 
 		// If accumulated error is too high compare with previous images to reduce it
 		if (frame[i].captured_from.error > prev_err) {
+			cout << "\n    --   Error too large, comparing with other frames...\n";
 			int best_previous = i - 1;
 			picture aux = frame[i];
 			for (int j = i - 1; j > 0; j--) {
@@ -152,9 +154,23 @@ int main(int argc, char* argv[])
 			cout << "Found radius = " << get<3>(circ_info) << " <--> Previously estimated ~ N( " << R << ", " << frame[i].captured_from.error << " )";
 			//cvWaitKey();
 			if (getWindowProperty("RANSAC result", 0) >= 0) cvDestroyWindow("RANSAC result");
-			frame[i] = SensorFusion(frame[0], frame[i]);
-			cout << "\nFrame (" << i << ")  X = " << frame[i].captured_from.abs_centre.x << ",  Y = " << frame[i].captured_from.abs_centre.y << ",  Z = " << frame[i].captured_from.z << "; Angle =  " << frame[i].captured_from.angle << ",  >> ERROR << = " << frame[i].captured_from.error;
+
+			// 5 - Perform sensor fusion if possible
+			pair<picture, bool> res(frame[i], true);
+			cout << "\n\n  >>  With original circle: ";
+			res = SensorFusion(frame[0], frame[i], false);
+			for (int j = 1; j < i; j++) {
+				if (res.second) break;
+				if (frame[j].has_circle) {
+					cout << "\n\n  >>  With circle in frame " << j << ": ";
+					res = SensorFusion(frame[j], frame[i], true);
+				}
+			}
+			frame[i] = res.first;
+			cout << "\nFrame (" << i << ")                 X = " << frame[i].captured_from.abs_centre.x << ",  Y = " << frame[i].captured_from.abs_centre.y << ",  Z = " << frame[i].captured_from.z << "; Angle =  " << frame[i].captured_from.angle << ",  >> ERROR << = " << frame[i].captured_from.error;
 		}
+		float ss = frame[i].captured_from.z / focalLength;
+		cout <<     "\n  In milimeters -->       X = " << frame[i].captured_from.abs_centre.x *ss << " mm,  Y = " << frame[i].captured_from.abs_centre.y * ss << " mm,  Z = " << frame[i].captured_from.z << " mm,  >> ERROR << = " << frame[i].captured_from.error * ss << " mm";
 	}
 
 	// 5 - DISPLAY COLLAGE

@@ -333,8 +333,8 @@ public:
 	Point2f circle_rel; float circle_dZ;
 	Point2f circle_abs; float circle_Z;
 	float circle_R; float circle_error;
-	Scalar c_color = Scalar(200, 255, 200);
-	float c_alpha = 0.2;
+	Scalar c_color = Scalar(100, 255, 100);
+	float c_alpha = 0.3;
 
 	picture() {};
 

@@ -33,6 +33,8 @@ pair<float, float> normal_distribution(vector<float> values, vector<float> weigh
 
 picture newpic_relpos(picture previous, Mat pic2, int n_kp = 60, int method = 1, bool show_kp = false, bool show_matches = false, bool show_statistics = false) {
 
+	int64_t start = cv::getTickCount();
+
 	method = 1;
 
 	Mat pic1 = previous.original;
@@ -40,13 +42,16 @@ picture newpic_relpos(picture previous, Mat pic2, int n_kp = 60, int method = 1,
 	picture newpic;
 	newpic.original = pic2;
 
-	// PREPROCESSING - FILTERS
+	//1 - PREPROCESSING - FILTERS
 	Mat pic_match1; Mat pic_match2;
 	int blur_ker = 3; int med_blur_ker = 3; //int diff_ker = 3;
 	blur(pic1, pic_match1, Size(blur_ker, blur_ker)); blur(pic2, pic_match2, Size(blur_ker, blur_ker));
 	medianBlur(pic_match1, pic_match1, med_blur_ker); medianBlur(pic_match2, pic_match2, med_blur_ker);
 	//Laplacian(pic_match1, pic_match1, CV_16S, diff_ker); Laplacian(pic_match2, pic_match2, CV_16S, diff_ker);
 
+
+	//2 - FEATURE DETECTION AND DESCRIPTION
+	
 	std::vector<cv::KeyPoint> keypoints1, keypoints2;
 	cv::Mat descriptors1, descriptors2;
 
@@ -61,17 +66,18 @@ picture newpic_relpos(picture previous, Mat pic2, int n_kp = 60, int method = 1,
 	  4 - your score type(one before last parameter) can change runtime a bit, you can use the ORB::FAST_SCORE instead of the ORB::HARRIS_SCORE but it doesn't matter much.
 	*/
 
-	//FEATURE DETECTION AND DESCRIPTION
-
 	cv::OrbDescriptorExtractor extractor;
 
 	orb.detect(pic_match1, keypoints1);
-	orb.compute(pic_match1, keypoints1, descriptors1);
 	orb.detect(pic_match2, keypoints2);
+	orb.compute(pic_match1, keypoints1, descriptors1);
 	orb.compute(pic_match2, keypoints2, descriptors2);
 
-	// MATCHING
+
+	//3 - MATCHING
 	std::vector< DMatch > matches;
+
+	//start = cv::getTickCount();
 
 	if (method == 1) {
 		BFMatcher matcher = BFMatcher(NORM_HAMMING, false);
@@ -86,6 +92,10 @@ picture newpic_relpos(picture previous, Mat pic2, int n_kp = 60, int method = 1,
 		Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create("BruteForce");
 		matcher->match(descriptors1, descriptors2, matches);
 	}
+
+
+	//end = cv::getTickCount();
+	//std::cout << "\n         BF took: " << ((float)end - (float)start) / (float)cv::getTickFrequency() * 1000.0 << " ms." << std::endl;
 
 
 
@@ -316,6 +326,11 @@ picture newpic_relpos(picture previous, Mat pic2, int n_kp = 60, int method = 1,
 
 	// Return:
 	newpic.captured_from = pos;
+
+
+	int64_t end = cv::getTickCount();
+	std::cout << "\n         Terrain detection took: " << ((float)end - (float)start) / (float)cv::getTickFrequency() * 1000.0 << " ms." << std::endl;
+
 	return newpic;
 }
 
@@ -324,6 +339,7 @@ int display_map(vector<picture> piece, float scale, float focalLength = 1200, fl
 	int n = piece.size();
 	vector<vector<Point2f>> abs_points(n, vector<Point2f>(5));
 
+	//GET NECESSARY MAP SIZE USING FURTHEST IMAGE FROM ORIGIN
 	float maxX = 0; float maxY = 0;
 	int diag = euclideanDist(Point2f(0, 0), Point2f(piece[0].original.rows, piece[0].original.rows));
 
@@ -430,16 +446,16 @@ int display_map(vector<picture> piece, float scale, float focalLength = 1200, fl
 	return 0;
 }
 
-picture SensorFusion(picture a1, picture a2) {
+pair<picture,bool> SensorFusion(picture a1, picture a2, bool blue = false) {
 
-	cout << "\n\n >>   [Recalibrating current position] --> Merging sensor results: ";
+	cout << "[Recalibrating current position] --> Merging sensor results: ";
 	// Adjustable parameters: ---------------
-	
-	float admit_factor = 0.5; // <---- Factor scaled by the circle radius to classify circles as same or different.
 
-	float Te[2] = {0, 30} ;   // <---- Terrain algorithm error scaling
-	//float Ce[2] = { 0.09, 0.06 };  // <---- Circle algorithm error scaling
-	float Re = 20;            // <---- Radius error scaling
+	float admit_factor = 0.3; // <---- Factor scaled by the circle radius to classify circles as same or different.
+
+	float Te[2] = {0, 20} ;          // <---- Terrain algorithm error scaling range
+	//float Ce[2] = { 0.09, 0.06 };  // <---- Circle algorithm error scaling range
+	float Re = 20;                   // <---- Radius error scaling range
 
 	//---------------------------------------
 
@@ -459,10 +475,11 @@ picture SensorFusion(picture a1, picture a2) {
 	float e_modulus = euclideanDist(Point(0, 0), e);
 
 	if (e_modulus > admit_factor* R1) {
-		cout << "\n   << -- WARNING: The new found circle is a different one. Impossible to recalibrate... >> \n       Proceeding with previous results.";
+		std::cout << "\n   << -- WARNING: The new found circle is a different one. Impossible to recalibrate... >> \n       Proceeding with previous results.";
 		a2.c_color = Scalar(0, 0, 100);
 		a2.c_alpha = 0.25;
-		return a2;
+		pair<picture,bool> res(a2, false);
+		return res;
 	}
 
 	float Rt = max((float)0.001, min((float)1, ((1 / (Te[1] - Te[0])) * (e2T - Te[0]))));
@@ -477,10 +494,17 @@ picture SensorFusion(picture a1, picture a2) {
 	a2.captured_from.error = (1 - L) * e_modulus*(1+Ct);
 	a2.captured_from.dz = (R2/R2_p) * a2.captured_from.dz;
 	a2.captured_from.z = (R2_p / R2) * a2.captured_from.z;
-	a2.c_color = Scalar(0, 100, 0);
-	a2.c_alpha = 0.3;
+	if (~blue) {
+		a2.c_color = Scalar(0, 150, 0);
+		a2.c_alpha = 0.3;
+	}
+	if (blue) {
+		a2.c_color = Scalar(255, 0, 0);
+		a2.c_alpha = 0.2;
+	}
 
 	cout << "\n      ( errT = " << Rt << ",  errC = " << Ct << "  --> L = " << L << " )";
 	cout << "\n   -- Position corrected by dx = " << L * e.x << " and dy = " << L * e.y << "  --> New error = " << a2.captured_from.error;
-	return a2;
+	pair<picture, bool> res(a2, true);
+	return res;
 }
